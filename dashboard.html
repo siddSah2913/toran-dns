@@ -2462,13 +2462,14 @@ const dom = {
 };
 
 // ── DNS SERVER CONFIG ──
-window.DNS_SERVER_URL = localStorage.getItem('dns_server_url') || '';
+window.DNS_SERVER_URL = localStorage.getItem('dns_server_url') || 'https://toran-dns.onrender.com';
 
 // ── POPULATE DNS ENDPOINTS ──
 window.updateEndpoints = function() {
   const user = authService?.getCurrentUser();
   const uid = user?.id || 'demo';
-  const doh = `https://dns.toran.app/${uid}/dns-query`;
+  const baseUrl = window.DNS_SERVER_URL || 'https://toran-dns.onrender.com';
+  const doh = `${baseUrl}/${uid}/dns-query`;
   const dot = `${uid}.dns.toran.app`;
   const ipv4 = '45.90.28.0 / 45.90.30.0';
   

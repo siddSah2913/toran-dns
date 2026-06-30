@@ -29,7 +29,8 @@ class SetupGuideManager {
     const activeProfile = profiles.find(p => p.isActive) || profiles[0];
     
     const uid = user?.id || 'demo';
-    const doh = `https://dns.toran.app/${uid}/dns-query`;
+    const baseUrl = window.DNS_SERVER_URL || 'https://toran-dns.onrender.com';
+    const doh = `${baseUrl}/${uid}/dns-query`;
     const dot = `${uid}.dns.toran.app`;
     const ipv4 = activeProfile?.ipv4 || '45.90.28.0 / 45.90.30.0';
     

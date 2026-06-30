@@ -1306,9 +1306,9 @@
       <div class="setup-desc">Each account gets a unique address. Copy it and paste into your device settings.</div>
     </div>
     <div class="setup-dns">
-      <div class="dns-pill" style="cursor:pointer;" onclick="navigator.clipboard.writeText('https://dns.toran.app/abc123/dns-query').then(()=>{this.style.background='rgba(5,150,105,0.3)';this.querySelector('.dns-pill-copy').textContent='Copied!';setTimeout(()=>{this.style.background='';this.querySelector('.dns-pill-copy').textContent='Copy';},2000)})">
+      <div class="dns-pill" style="cursor:pointer;" onclick="navigator.clipboard.writeText('https://toran-dns.onrender.com/abc123/dns-query').then(()=>{this.style.background='rgba(5,150,105,0.3)';this.querySelector('.dns-pill-copy').textContent='Copied!';setTimeout(()=>{this.style.background='';this.querySelector('.dns-pill-copy').textContent='Copy';},2000)})">
         <span class="dns-pill-label">DoH</span>
-        <span style="flex:1;">https://dns.toran.app/abc123/dns-query</span>
+        <span style="flex:1;">https://toran-dns.onrender.com/abc123/dns-query</span>
         <span class="dns-pill-copy" style="font-size:11px;color:var(--blue);font-weight:500;">Copy</span>
       </div>
       <div class="dns-pill" style="cursor:pointer;" onclick="navigator.clipboard.writeText('abc123.dns.toran.app').then(()=>{this.style.background='rgba(5,150,105,0.3)';this.querySelector('.dns-pill-copy').textContent='Copied!';setTimeout(()=>{this.style.background='';this.querySelector('.dns-pill-copy').textContent='Copy';},2000)})">
