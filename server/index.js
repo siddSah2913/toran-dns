@@ -1,4 +1,4 @@
-const { DNSServer, DNSRequest } = require('dns2');
+const { UDPServer, UDPClient, DOHServer, createDOHServer, Packet } = require('dns2');
 const express = require('express');
 const https = require('https');
 const http = require('http');
@@ -188,55 +188,54 @@ function logQuery(entry) {
   }
 }
 
-// ── UDP DNS Server ──
-const dnsServer = new DNSServer({
-  handle: async (request, send) => {
-    const question = request.questions[0];
-    if (!question) return send({ rcode: 1 });
-    
-    const domain = question.name;
-    const type = question.type;
-    const clientIp = request.address?.address || 'unknown';
-    
-    // Extract uid from subdomain if present (e.g., ss29kx4a.dns.toran.app)
-    let uid = null;
-    const parts = domain.split('.');
-    if (parts.length > 3 && parts[parts.length - 3] === 'dns' && parts[parts.length - 2] === 'toran') {
-      uid = parts[0];
-    }
-    
-    const blocked = await handleDNSQuery(uid, domain, type, clientIp);
-    
-    if (blocked) {
-      // Return NXDOMAIN for blocked queries
-      return send({
-        id: request.id,
-        questions: request.questions,
-        answers: [],
-        rcode: 3, // NXDOMAIN
-      });
-    }
-    
-    // Forward to upstream
-    const upstream = new DNSRequest({
-      name: domain,
-      type: type,
+// ── UDP DNS Server (only on non-Cloud Run environments) ──
+if (!process.env.RENDER) {
+  try {
+    const dnsServer = new UDPServer({
+      handle: async (request, send) => {
+        const question = request.questions[0];
+        if (!question) return send({ rcode: 1 });
+        
+        const domain = question.name;
+        const type = question.type;
+        const clientIp = request.address?.address || 'unknown';
+        
+        let uid = null;
+        const parts = domain.split('.');
+        if (parts.length > 3 && parts[parts.length - 3] === 'dns' && parts[parts.length - 2] === 'toran') {
+          uid = parts[0];
+        }
+        
+        const blocked = await handleDNSQuery(uid, domain, type, clientIp);
+        
+        if (blocked) {
+          return send({
+            id: request.id,
+            questions: request.questions,
+            answers: [],
+            rcode: 3,
+          });
+        }
+        
+        const client = new UDPClient();
+        try {
+          const response = await client({ name: domain, type });
+          send(response);
+        } catch (err) {
+          console.error('[DNS] Upstream error:', err.message);
+          send({ rcode: 2 });
+        }
+      },
+      port: PORT,
     });
-    
-    try {
-      const response = await upstream.send();
-      send(response);
-    } catch (err) {
-      console.error('[DNS] Upstream error:', err.message);
-      send({ rcode: 2 }); // SERVFAIL
-    }
-  },
-  port: PORT,
-});
 
-dnsServer.listen(PORT, () => {
-  console.log(`[DNS] UDP server listening on port ${PORT}`);
-});
+    dnsServer.listen(PORT, () => {
+      console.log(`[DNS] UDP server listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.log('[DNS] UDP server skipped:', err.message);
+  }
+}
 
 // ── DoH (DNS over HTTPS) Server ──
 const app = express();
@@ -274,8 +273,8 @@ async function handleDoH(req, res, uid) {
       });
     }
     
-    const request = new DNSRequest({ name: domain, type: parseInt(type) || 1 });
-    const response = await request.send();
+    const client = new UDPClient();
+    const response = await client({ name: domain, type: parseInt(type) || 1 });
     
     res.json({
       Status: 0,
