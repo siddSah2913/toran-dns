@@ -1,0 +1,3503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Toran DNS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #0A0F1A;
+  --navy-2: #111827;
+  --navy-3: #1C2B4A;
+  --blue: #4F8EF7;
+  --blue-dim: #2563EB;
+  --blue-pale: #EFF4FF;
+  --blue-pale-2: #DBEAFE;
+  --green: #3DD68C;
+  --green-pale: #ECFDF5;
+  --red: #EF4444;
+  --red-pale: #FEF2F2;
+  --orange: #F59E0B;
+  --orange-pale: #FFFBEB;
+  --surface: #F8F9FC;
+  --surface-2: #F0F2F7;
+  --white: #FFFFFF;
+  --text-primary: #0A0F1A;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --border: #E5E9F0;
+  --border-strong: #CBD5E1;
+  --sidebar-width: 240px;
+  --topbar-height: 60px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(10,15,26,0.07), 0 1px 2px rgba(10,15,26,0.04);
+  --shadow-md: 0 4px 12px rgba(10,15,26,0.08), 0 2px 4px rgba(10,15,26,0.04);
+  --shadow-xl: 0 20px 60px rgba(10,15,26,0.15), 0 8px 20px rgba(10,15,26,0.08);
+  --table-row: var(--surface);
+  --glass-bg: rgba(255,255,255,0.72);
+  --glass-bg-heavy: rgba(255,255,255,0.85);
+  --glass-border: rgba(255,255,255,0.4);
+  --glass-blur: 16px;
+  --font-display: 'DM Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 30px;
+  height: 30px;
+  background: var(--navy);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 12px;
+  overflow-y: auto;
+}
+
+.nav-section-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 8px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  margin-bottom: 1px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover { background: var(--surface); color: var(--text-secondary); }
+
+.nav-item.active svg { stroke: var(--blue-dim); }
+
+.nav-item svg {
+  flex-shrink: 0;
+  stroke: var(--text-muted);
+  transition: stroke 0.12s;
+}
+
+.nav-item:hover svg { stroke: var(--text-secondary); }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--red-pale);
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-family: var(--font-mono);
+}
+
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.user-card:hover { background: var(--surface); }
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--blue-pale);
+  color: var(--blue-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+}
+
+.user-info { flex: 1; min-width: 0; }
+
+.user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-plan {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── MAIN LAYOUT ── */
+.main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: var(--topbar-height);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-pale);
+  border: 1px solid #A7F3D0;
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #065F46;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2.5s ease infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid var(--white);
+}
+
+/* ── CONTENT ── */
+.content {
+  flex: 1;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1280px;
+}
+
+/* ── STAT CARDS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-card-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.stat-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card-icon.blue { background: var(--blue-pale); }
+.stat-card-icon.green { background: var(--green-pale); }
+.stat-card-icon.red { background: var(--red-pale); }
+.stat-card-icon.orange { background: var(--orange-pale); }
+
+.stat-card-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.stat-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.stat-delta.up { background: var(--green-pale); color: #065F46; }
+.stat-delta.down { background: var(--red-pale); color: #991B1B; }
+
+.stat-delta-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── CHART ROW ── */
+.chart-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.card-body { padding: 20px 22px; }
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── CHART CANVAS AREA ── */
+.chart-area {
+  height: 200px;
+  position: relative;
+  padding: 0 4px;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100%;
+  padding-top: 8px;
+}
+
+.bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-wrap {
+  width: 100%;
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: calc(100% - 24px);
+}
+
+.bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: opacity 0.15s;
+}
+
+.bar:hover { opacity: 0.8; }
+.bar.allowed { background: var(--blue); }
+.bar.blocked { background: #FECACA; }
+
+.bar-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* ── DONUT CHART ── */
+.donut-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0;
+}
+
+.donut-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-pct {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.donut-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.donut-legend {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.donut-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+
+.donut-legend-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.donut-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.donut-legend-val {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* ── TWO COL GRID ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+}
+
+/* ── QUERY LOG TABLE ── */
+.query-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.query-table th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.query-table td {
+  padding: 11px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.query-table tr:last-child td { border-bottom: none; }
+
+.query-table tr:hover td { background: var(--surface); }
+
+.domain-cell {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time-cell {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.device-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.device-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+/* ── FILTER TOGGLES ── */
+.toggle-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.toggle-row:last-child { border-bottom: none; }
+
+.toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-icon-wrap {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toggle-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+.toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+/* ── DEVICES ── */
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.device-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.device-row:last-child { border-bottom: none; }
+.device-row:hover { background: var(--surface); }
+
+.device-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.device-meta { flex: 1; min-width: 0; }
+
+.device-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-ip {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.device-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.device-online {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.device-online.online { color: #065F46; }
+.device-online.offline { color: var(--text-muted); }
+
+.device-online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.device-online.online .device-online-dot { background: var(--green); }
+.device-online.offline .device-online-dot { background: var(--border-strong); }
+
+.device-last {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── DNS ENDPOINT ── */
+.endpoint-section {
+  background: var(--navy);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.endpoint-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.endpoint-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+
+.endpoint-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.endpoint-row {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.endpoint-type {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--blue);
+  flex-shrink: 0;
+  width: 36px;
+}
+
+.endpoint-url {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.5);
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+.copy-btn:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
+
+/* ── BLOCKLIST SECTION ── */
+.blocklist-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 22px;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-field::placeholder { color: var(--text-muted); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+.btn:hover { background: var(--white); box-shadow: var(--shadow-sm); }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; min-height: 36px; }
+
+.domain-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.domain-tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: color 0.12s;
+}
+
+.domain-tag-remove:hover { color: var(--red); }
+
+/* ── ANALYTICS ROW ── */
+.top-domains {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.domain-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.domain-row:last-child { border-bottom: none; }
+
+.domain-rank {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.domain-name {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domain-bar-wrap {
+  width: 80px;
+  height: 5px;
+  background: var(--surface-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.domain-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--blue);
+}
+
+.domain-count {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  width: 48px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .chart-row { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .content { padding: 16px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .query-table th:nth-child(3),
+  .query-table td:nth-child(3) { display: none; }
+}
+
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,15,26,0.35);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 45;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+}
+.sidebar-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Body scroll lock when sidebar open */
+body.sidebar-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* ── GLASSMORPHISM ── */
+.nav-item.active {
+  background: rgba(79,142,247,0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79,142,247,0.15);
+}
+.stat-card {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus {
+  background: var(--white);
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(79,142,247,0.12);
+  outline: none;
+}
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 99px;
+  background: rgba(203,213,225,0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-switch input:checked + .toggle-track {
+  background: rgba(79,142,247,0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 0 8px rgba(79,142,247,0.25);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+  pointer-events: none;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+}
+.pill-allowed { background: rgba(236,253,245,0.8); color: #065F46; }
+.pill-blocked { background: rgba(254,242,242,0.8); color: #991B1B; }
+.pill-ad { background: rgba(255,251,235,0.8); color: #92400E; }
+.pill-tracker { background: rgba(239,244,255,0.8); color: #1E40AF; }
+.pill-malware { background: rgba(253,244,255,0.8); color: #7E22CE; }
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(10,15,26,0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--white);
+  border: none;
+  box-shadow: var(--shadow-sm);
+}
+.btn-add:hover {
+  background: rgba(10,15,26,1);
+  box-shadow: var(--shadow-md);
+}
+.domain-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  position: relative;
+}
+.icon-btn:hover {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.select-sm {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  outline: none;
+}
+
+/* ── RESPONSIVE TABLES ── */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+
+.query-table {
+  min-width: 600px;
+}
+
+.query-table th:first-child,
+.query-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--white);
+  z-index: 2;
+  box-shadow: inset -1px 0 0 var(--border);
+}
+
+.query-table th:first-child {
+  z-index: 3;
+  box-shadow: inset -1px 0 0 var(--border), 0 1px 0 var(--border);
+}
+
+.query-table td:first-child {
+  box-shadow: inset -1px 0 0 var(--border);
+}
+
+/* Scroll hint gradient */
+.table-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to left, var(--white), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.table-wrapper:has(+:not(:empty))::after { opacity: 1; }
+
+/* ── TOUCH TARGETS ── */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item { padding: 12px 14px; }
+  .toggle-switch { width: 44px; height: 26px; }
+  .toggle-thumb { width: 20px; height: 20px; top: 3px; left: 3px; }
+  .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(18px); }
+  .icon-btn { width: 40px; height: 40px; }
+  .btn-add { padding: 10px 18px; }
+  .copy-btn { padding: 8px 12px; font-size: 12px; }
+  .device-row { padding: 16px 22px; }
+  .status-pill { padding: 6px 12px; font-size: 12px; }
+  .select-sm { padding: 8px 12px; font-size: 13px; }
+  .input-field { padding: 12px 14px; font-size: 14px; }
+  .domain-tag { padding: 8px 12px; font-size: 13px; }
+  .domain-tag-remove { padding: 4px; }
+}
+
+/* Minimum touch target for all interactive elements */
+@media (max-width: 768px) {
+  a, button, [role="button"], input[type="checkbox"], input[type="radio"], select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .nav-item { min-height: 48px; }
+  .toggle-switch { min-height: 44px; }
+}
+
+/* ── RESPONSIVE CHARTS ── */
+@media (max-width: 768px) {
+  .donut-wrap { width: 120px; height: 120px; }
+  .donut-wrap svg { width: 120px; height: 120px; }
+  .donut-pct { font-size: 20px; }
+  .chart-legend { flex-wrap: wrap; justify-content: center; }
+  .bar-label { font-size: 9px; }
+}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .sidebar { transition: none; }
+  .sidebar-overlay { transition: none; }
+  .toggle-thumb { transition: none; }
+  .toggle-track { transition: none; }
+  .dns-packet { animation: none; }
+  .status-dot { animation: none; }
+  .badge-dot { animation: none; }
+}
+
+/* ── FOCUS VISIBLE ── */
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.btn:focus-visible,
+.nav-item:focus-visible,
+.icon-btn:focus-visible,
+.toggle-switch:focus-visible,
+.select-sm:focus-visible,
+.input-field:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ── MOBILE SPECIFIC LAYOUT FIXES ── */
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr; }
+  .chart-row { grid-template-columns: 1fr; }
+  .content { gap: 16px; }
+  .card-header { flex-wrap: wrap; gap: 12px; }
+  .card-actions { width: 100%; justify-content: flex-end; }
+  .endpoint-row { flex-wrap: wrap; }
+  .endpoint-type { width: auto; }
+  .endpoint-url { flex: 1 1 calc(100% - 80px); }
+  .domain-bar-wrap { width: 60px; }
+  .domain-count { width: 40px; }
+}
+
+@media (max-width: 480px) {
+  .topbar { padding: 0 16px; }
+  .page-title { font-size: 15px; }
+  .status-chip { padding: 4px 10px; font-size: 11.5px; }
+  .stat-card { padding: 16px 18px; }
+  .stat-card-value { font-size: 24px; }
+  .card-body { padding: 16px 18px; }
+  .endpoint-section { padding: 18px 20px; }
+  .blocklist-area { padding: 16px 18px; }
+  .input-row { flex-direction: column; }
+  .btn-add { width: 100%; justify-content: center; }
+  .donut-wrap { width: 100px; height: 100px; }
+  .donut-wrap svg { width: 100px; height: 100px; }
+  .donut-pct { font-size: 18px; }
+  .domain-bar-wrap { width: 50px; }
+  .topbar-right { gap: 8px; }
+  .icon-btn { width: 38px; height: 38px; }
+}
+.setup-guide-modal {
+  position: fixed; inset: 0; background: rgba(10,15,26,0.8); backdrop-filter: blur(4px);
+  z-index: 3000; display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.setup-guide-modal.visible { opacity: 1; visibility: visible; }
+.setup-guide-overlay {
+  position: fixed; inset: 0; background: rgba(10,15,26,0.8); backdrop-filter: blur(4px);
+  z-index: 2000; display: flex; align-items: center; justify-content: center;
+}
+.setup-guide-container {
+  background: var(--glass-bg-heavy); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 32px;
+  max-width: 800px; width: 90%; box-shadow: var(--shadow-xl); max-height: 90vh; overflow-y: auto;
+}
+.setup-guide-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.setup-guide-close { background: none; border: none; cursor: pointer; padding: 8px; border-radius: var(--radius-sm); color: var(--text-muted); }
+.setup-guide-close:hover { color: var(--text-secondary); background: var(--surface); }
+.setup-guide-title { display: flex; align-items: center; gap: 12px; }
+.setup-guide-platform-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.setup-guide-progress { display: flex; align-items: center; gap: 12px; }
+.setup-guide-progress-track { width: 120px; height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.setup-guide-progress-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+.setup-guide-step-indicator { font-size: 13px; color: var(--text-muted); }
+.setup-guide-body { margin-bottom: 24px; }
+.setup-guide-step-container { min-height: 200px; }
+.setup-guide-step-content { margin-bottom: 24px; }
+.setup-guide-step-header { display: flex; gap: 16px; margin-bottom: 20px; }
+.setup-guide-step-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(79,142,247,0.12); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(79,142,247,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.setup-guide-step-title-section h4 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.setup-guide-step-meta { display: flex; gap: 12px; font-size: 12px; }
+.setup-guide-step-difficulty { background: var(--orange-pale); color: var(--orange); padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.setup-guide-step-time { color: var(--text-muted); }
+.setup-guide-step-body { margin-top: 20px; }
+.setup-guide-step-description { color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+.setup-guide-instructions { margin-bottom: 20px; }
+.setup-guide-instructions h5 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.setup-guide-instruction-list { padding-left: 20px; margin-bottom: 0; }
+.setup-guide-instruction-list li { margin-bottom: 8px; color: var(--text-secondary); line-height: 1.5; }
+.setup-guide-tip { display: flex; align-items: flex-start; gap: 10px; background: rgba(255,251,235,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(245,158,11,0.2); border-radius: var(--radius-sm); padding: 12px; margin-top: 20px; }
+.setup-guide-tip-icon { margin-top: 2px; flex-shrink: 0; }
+.setup-guide-tip-content { font-size: 13px; color: var(--text-primary); }
+.setup-guide-tip-content strong { color: var(--orange); }
+.setup-guide-devices-section { margin-top: 24px; }
+.setup-guide-devices-section h5 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.setup-guide-devices-list { display: flex; flex-direction: column; gap: 12px; }
+.setup-guide-device-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--glass-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); }
+.setup-guide-device-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.setup-guide-device-info { flex: 1; }
+.setup-guide-device-name { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+.setup-guide-device-subtitle { font-size: 12px; color: var(--text-muted); }
+.setup-guide-navigation { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
+.setup-guide-nav-btn { padding: 10px 24px; border-radius: var(--radius-sm); background: var(--glass-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); color: var(--text-primary); font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.setup-guide-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.setup-guide-nav-btn.setup-guide-next { background: rgba(79,142,247,0.9); color: var(--white); border: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(79,142,247,0.3); }
+.setup-guide-nav-btn.setup-guide-next:hover { background: var(--blue); box-shadow: 0 6px 16px rgba(79,142,247,0.4); }
+.setup-guide-footer { text-align: center; }
+.setup-guide-skip { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; text-decoration: underline; padding: 8px; font-family: inherit; }
+
+/* ── SETUP GUIDE RESPONSIVE ── */
+@media (max-width: 768px) {
+  .setup-guide-container { width: 95% !important; max-height: 90vh !important; padding: 20px !important; margin: 12px; }
+  .setup-guide-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .setup-guide-progress { width: 100%; }
+  .setup-guide-progress-track { flex: 1; width: auto; }
+  .setup-guide-step-header { flex-direction: column; gap: 12px; }
+  .setup-guide-step-content { padding: 0; }
+  .setup-guide-instruction-list { padding-left: 16px; }
+  .setup-guide-instruction-list li { font-size: 13px; line-height: 1.6; }
+  .setup-guide-nav-btn { padding: 10px 16px; font-size: 13px; }
+  .setup-guide-tip { flex-direction: column; gap: 8px; }
+  .setup-guide-device-item { padding: 10px; }
+  .setup-guide-step-meta { flex-wrap: wrap; gap: 8px; }
+}
+@media (max-width: 480px) {
+  .setup-guide-container { padding: 16px !important; }
+  .setup-guide-step-title-section h4 { font-size: 16px; }
+  .setup-guide-step-description { font-size: 13px; }
+  .setup-guide-instruction-list li { font-size: 12px; }
+  .setup-guide-navigation { flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .setup-guide-step-indicator { width: 100%; text-align: center; }
+}
+
+/* ── PLATFORM SELECTION RESPONSIVE ── */
+@media (max-width: 768px) {
+  .setup-guide-selection-container { padding: 24px !important; }
+  .setup-guide-selection-grid { grid-template-columns: 1fr !important; }
+  .setup-guide-platform-card { padding: 20px !important; }
+}
+@media (max-width: 480px) {
+  .setup-guide-selection-container { padding: 16px !important; }
+}
+
+/* ── TOPBAR RESPONSIVE ── */
+@media (max-width: 768px) {
+  .topbar { padding: 0 16px; }
+  .page-title { font-size: 15px; }
+  .topbar-right { gap: 8px; }
+}
+@media (max-width: 480px) {
+  .topbar { padding: 0 12px; min-height: 50px; }
+  .page-title { font-size: 14px; }
+}
+
+/* ── STAT CARDS RESPONSIVE ── */
+@media (max-width: 768px) {
+  .stat-grid { gap: 12px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-card-value { font-size: 22px; }
+  .stat-card-label { font-size: 11px; }
+}
+@media (max-width: 480px) {
+  .stat-grid { gap: 10px; }
+  .stat-card { padding: 12px 14px; }
+  .stat-card-value { font-size: 20px; }
+}
+
+/* ── CARDS RESPONSIVE ── */
+@media (max-width: 768px) {
+  .card-header { padding: 14px 16px; }
+  .card-body { padding: 14px 16px; }
+}
+@media (max-width: 480px) {
+  .card-header { padding: 12px 14px; }
+  .card-body { padding: 12px 14px; }
+}
+
+/* ── SIDEBAR FOOTER RESPONSIVE ── */
+@media (max-width: 768px) {
+  .sidebar-footer { padding: 12px; }
+  .user-card { padding: 10px; }
+  .user-avatar { width: 32px; height: 32px; font-size: 12px; }
+}
+
+/* ── QUERY TABLE RESPONSIVE ── */
+@media (max-width: 768px) {
+  .query-table { font-size: 13px; }
+  .query-table th, .query-table td { padding: 10px 12px; }
+}
+@media (max-width: 480px) {
+  .query-table { font-size: 12px; }
+  .query-table th, .query-table td { padding: 8px 10px; }
+}
+
+/* ── NAV ITEMS RESPONSIVE ── */
+@media (max-width: 768px) {
+  .nav-section { padding: 8px 0; }
+  .nav-item { padding: 10px 14px; gap: 10px; }
+  .nav-item svg { width: 18px; height: 18px; }
+}
+
+/* ── DOMAIN TAGS RESPONSIVE ── */
+@media (max-width: 768px) {
+  .blocklist-area { padding: 14px 16px; }
+  .input-row { gap: 8px; }
+}
+@media (max-width: 480px) {
+  .input-row { flex-direction: column; }
+  .input-field { width: 100%; }
+  .btn-add { width: 100%; justify-content: center; }
+}
+
+/* ── DONUT CHART RESPONSIVE ── */
+@media (max-width: 768px) {
+  .donut-wrap { width: 110px; height: 110px; }
+  .donut-wrap svg { width: 110px; height: 110px; }
+  .donut-pct { font-size: 18px; }
+}
+@media (max-width: 480px) {
+  .donut-wrap { width: 90px; height: 90px; }
+  .donut-wrap svg { width: 90px; height: 90px; }
+  .donut-pct { font-size: 16px; }
+}
+
+/* ── BAR CHART RESPONSIVE ── */
+@media (max-width: 768px) {
+  .bar-label { font-size: 10px; }
+  .bar-value { font-size: 10px; }
+  .domain-bar-wrap { width: 55px; }
+}
+
+/* ── BUTTONS RESPONSIVE ── */
+@media (max-width: 768px) {
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 36px; padding: 6px 14px; }
+  .icon-btn { width: 40px; height: 40px; }
+}
+@media (max-width: 480px) {
+  .btn { min-height: 44px; }
+  .icon-btn { width: 38px; height: 38px; }
+}
+
+/* ── MODAL/POPUP RESPONSIVE ── */
+@media (max-width: 768px) {
+  .modal-container { width: 95% !important; max-height: 85vh !important; }
+}
+
+/* ── UTILITIES MOBILE ── */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+}
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+}
+
+/* ── INLINE GRID RESPONSIVE OVERRIDES ── */
+@media (max-width: 768px) {
+  body { overflow-x: hidden; }
+  .main { max-width: 100vw; }
+  #sidebar-toggle { display: flex !important; }
+  .content { padding: 16px; max-width: 100%; }
+  .main > .content > div[style*="grid-template-columns: 1.2fr"],
+  .main > .content > div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* Override inline grids inside content divs */
+@media (max-width: 768px) {
+  div[style*="grid-template-columns: 1.2fr 1fr"] { grid-template-columns: 1fr !important; }
+  div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+  div[style*="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"] { grid-template-columns: 1fr !important; }
+  div[style*="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))"] { grid-template-columns: 1fr !important; }
+  div[style*="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"] { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a href="index.html" class="logo">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+          <path d="M9 2L2 5.5v5C2 13.75 5.08 16.7 9 18c3.92-1.3 7-4.25 7-7.5v-5L9 2z" fill="#4F8EF7" opacity="0.3"/>
+          <path d="M9 2L2 5.5v5C2 13.75 5.08 16.7 9 18c3.92-1.3 7-4.25 7-7.5v-5L9 2z" fill="none" stroke="#4F8EF7" stroke-width="1.5"/>
+          <circle cx="9" cy="9.5" r="2.5" fill="#4F8EF7"/>
+        </svg>
+      </div>
+      <span class="logo-text">Toran DNS</span>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Dashboard navigation">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" href="#" onclick="showSection('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('analytics')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('logs')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Query logs
+      <span class="nav-badge" id="logs-badge" style="display: none;">0</span>
+    </a>
+
+    <div class="nav-section-label">Configuration</div>
+    <a class="nav-item" href="#" onclick="showSection('filtering')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtering
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('blocklist')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      Blocklist
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('allowlist')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      Allowlist
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('devices')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Devices
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('profiles')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Profiles
+    </a>
+
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" href="#" onclick="showSection('account')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Account
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('settings')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M5.34 5.34L3.93 3.93M12 20v2M12 2v2"/></svg>
+      Settings
+    </a>
+    <a class="nav-item" href="#" onclick="showSetupGuideSelection()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Setup Guide
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('apikeys')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      API keys
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card" onclick="handleLogout()" title="Click to log out">
+      <div class="user-avatar">?</div>
+      <div class="user-info">
+        <div class="user-name">User</div>
+        <div class="user-plan">Free plan</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </div>
+    <button onclick="handleDeleteAccount()" style="width:100%;padding:8px;margin-top:8px;background:#DC2626;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:background 0.2s;" onmouseover="this.style.background='#991B1B'" onmouseout="this.style.background='#DC2626'">Delete Account</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="sidebar-toggle" aria-label="Toggle sidebar" style="display:none;" onclick="toggleSidebar()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="page-title" id="page-title">Overview</span>
+    </div>
+    <div class="topbar-right">
+      <div class="status-chip">
+        <span class="status-dot"></span>
+        Protection active
+      </div>
+      <button class="icon-btn" aria-label="Notifications">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="icon-btn" aria-label="Refresh data" onclick="this.style.transform='rotate(360deg)'; setTimeout(()=>this.style.transform='',400);" style="transition: transform 0.4s;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════
+       SECTION: OVERVIEW (default)
+       ══════════════════════════════ -->
+  <main class="content" id="section-dashboard">
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">Total queries</span>
+          <div class="stat-card-icon blue">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+        </div>
+        <div class="stat-card-value" id="stat-total-queries">0</div>
+        <div class="stat-card-bottom">
+          <span class="stat-delta-label">Awaiting active connection</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">Blocked</span>
+          <div class="stat-card-icon red">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+        </div>
+        <div class="stat-card-value" id="stat-blocked-queries">0</div>
+        <div class="stat-card-bottom">
+          <span class="stat-delta-label">No threats detected yet</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">Allowed</span>
+          <div class="stat-card-icon green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="stat-card-value" id="stat-allowed-queries">0</div>
+        <div class="stat-card-bottom">
+          <span class="stat-delta-label">No requests processed</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">Block rate</span>
+          <div class="stat-card-icon orange">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+        </div>
+        <div class="stat-card-value" id="stat-block-rate">0.0%</div>
+        <div class="stat-card-bottom">
+          <span class="stat-delta-label">Of all queries blocked</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART ROW -->
+    <div class="chart-row">
+      <!-- Bar Chart: Queries over time -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Query traffic</div>
+            <div class="card-subtitle">Last 7 days</div>
+          </div>
+          <div class="card-actions">
+            <select class="select-sm">
+              <option>7 days</option>
+              <option>14 days</option>
+              <option>30 days</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-area">
+            <div class="chart-bars" id="chart-bars" aria-label="Query traffic bar chart, last 7 days">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:var(--blue);"></div>
+              Allowed
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#FECACA;"></div>
+              Blocked
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut: Block breakdown -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Block breakdown</div>
+            <div class="card-subtitle">By category</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="donut-area">
+            <div class="donut-wrap">
+              <svg width="140" height="140" viewBox="0 0 140 140" aria-label="Donut chart showing block category breakdown">
+                <circle cx="70" cy="70" r="54" fill="none" stroke="#F0F2F7" stroke-width="20"/>
+              </svg>
+              <div class="donut-center">
+                <div class="donut-pct">0.0%</div>
+                <div class="donut-label">blocked</div>
+              </div>
+            </div>
+            <div class="donut-legend" id="donut-legend">
+              <div style="text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">No blocked queries yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWO COL: Queries + Categories -->
+    <div class="two-col">
+
+      <!-- Recent query log -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Recent queries</div>
+            <div class="card-subtitle">Live feed</div>
+          </div>
+          <a href="#" onclick="showSection('logs')" style="font-size:12.5px; color:var(--blue); text-decoration:none; font-weight:500;">View all</a>
+        </div>
+        <div class="table-wrapper">
+          <table class="query-table" aria-label="Recent DNS queries">
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>Status</th>
+                <th>Device</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="query-log-body">
+              <!-- rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Filtering toggles -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Filtering</div>
+            <div class="card-subtitle">Active categories</div>
+          </div>
+          <a href="#" onclick="showSection('filtering')" style="font-size:12.5px; color:var(--blue); text-decoration:none; font-weight:500;">Manage</a>
+        </div>
+        <div class="card-body" style="padding:0 22px;">
+          <div class="toggle-list" id="toggle-list">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DNS Endpoint + Devices row -->
+    <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+
+      <!-- DNS Endpoint -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Your DNS endpoints</div>
+            <div class="card-subtitle">Point your device or router here</div>
+          </div>
+        </div>
+        <div class="card-body">
+           <div class="endpoint-section">
+            <div>
+              <div class="endpoint-title">Your DNS endpoints</div>
+              <div class="endpoint-desc">Copy these addresses into your device or router DNS settings.</div>
+            </div>
+            <div class="endpoint-list" id="endpoint-list">
+              <div class="endpoint-row">
+                <span class="endpoint-type">DoH</span>
+                <span class="endpoint-url" id="ep-doh">Loading...</span>
+                <button class="copy-btn" id="btn-copy-doh" onclick="copyEndpoint('doh')">Copy</button>
+              </div>
+              <div class="endpoint-row">
+                <span class="endpoint-type">DoT</span>
+                <span class="endpoint-url" id="ep-dot">Loading...</span>
+                <button class="copy-btn" id="btn-copy-dot" onclick="copyEndpoint('dot')">Copy</button>
+              </div>
+              <div class="endpoint-row">
+                <span class="endpoint-type">IPv4</span>
+                <span class="endpoint-url" id="ep-ipv4">Loading...</span>
+                <button class="copy-btn" id="btn-copy-ipv4" onclick="copyEndpoint('ipv4')">Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected devices -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Devices</div>
+            <div class="card-subtitle">0 connected</div>
+          </div>
+          <button class="btn-add" style="font-size:12px; padding:6px 12px;" onclick="showSection('devices')">Add device</button>
+        </div>
+        <div class="device-list"><!-- rendered by JS --></div>
+      </div>
+    </div>
+
+    <!-- Top domains + Blocklist -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+      <!-- Top queried domains -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Top domains</div>
+            <div class="card-subtitle">Most queried today</div>
+          </div>
+          <select class="select-sm">
+            <option>Allowed</option>
+            <option>Blocked</option>
+          </select>
+        </div>
+        <div class="card-body" style="padding-top:8px; padding-bottom:8px;">
+          <div class="top-domains" id="top-domains"><!-- rendered by JS --></div>
+        </div>
+      </div>
+
+      <!-- Custom blocklist -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Custom blocklist</div>
+            <div class="card-subtitle">Always block these domains</div>
+          </div>
+          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);" id="blocklist-count">0 domains</span>
+        </div>
+        <div class="blocklist-area">
+          <div class="input-row">
+            <input class="input-field" id="blocklist-input" type="text" placeholder="example.com" autocomplete="off" autocapitalize="off">
+            <button class="btn-add" onclick="addBlocklistEntry()">Add</button>
+          </div>
+          <div class="domain-tags" id="blocklist-tags"><!-- rendered by JS --></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════════════
+       SECTION: FILTERING
+       ══════════════ -->
+  <main class="content" id="section-filtering" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Filtering categories</div>
+          <div class="card-subtitle">Enable or disable each protection layer independently</div>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0 22px;">
+        <div class="toggle-list" id="filtering-full-list"><!-- rendered by JS --></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: LOGS
+       ══════════════ -->
+  <main class="content" id="section-logs" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Query logs</div>
+          <div class="card-subtitle">All DNS queries in the last 7 days</div>
+        </div>
+        <div class="card-actions">
+          <select class="select-sm">
+            <option>All statuses</option>
+            <option>Blocked</option>
+            <option>Allowed</option>
+          </select>
+          <select class="select-sm">
+            <option>All devices</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="query-table" style="min-width:600px;" aria-label="Full DNS query log">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Status</th>
+              <th>Category</th>
+              <th>Device</th>
+              <th>Response time</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="logs-full-body"><!-- rendered by JS --></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: DEVICES
+       ══════════════ -->
+  <main class="content" id="section-devices" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Connected devices</div>
+          <div class="card-subtitle" id="device-filter-summary">Manage devices on your account</div>
+        </div>
+        <button class="btn-add" onclick="window.showSetupGuideSelection()">Add device</button>
+      </div>
+      <div class="device-list"><!-- rendered by JS --></div>
+    </div>
+
+    <!-- Device Setup Instructions -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">How to add a device</div>
+          <div class="card-subtitle">Follow the steps for your device type</div>
+        </div>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:20px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+          <div style="background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--border);">
+            <div style="width:32px;height:32px;border-radius:var(--radius-sm);background:var(--blue-pale);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Computer</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Change your DNS settings to filter ads on Windows or Mac.</div>
+          </div>
+          <div style="background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--border);">
+            <div style="width:32px;height:32px;border-radius:var(--radius-sm);background:var(--green-pale);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Phone or Tablet</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Use Private DNS on Android or manual DNS on iPhone.</div>
+          </div>
+          <div style="background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--border);">
+            <div style="width:32px;height:32px;border-radius:var(--radius-sm);background:var(--orange-pale);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Router (all devices)</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">Protect every device on your network at once.</div>
+          </div>
+        </div>
+        <div style="background:var(--blue-pale);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span style="font-size:13px;color:var(--blue-dim);font-weight:500;">Need step-by-step help?</span>
+          <button class="btn btn-sm" style="background:var(--blue);color:var(--white);border:none;font-size:12px;" onclick="window.showSetupGuideSelection()">Open Setup Guide</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: ANALYTICS
+       ══════════════ -->
+  <main class="content" id="section-analytics" style="display:none;">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">Avg response time</span>
+        </div>
+        <div class="stat-card-value">0 ms</div>
+        <div class="stat-card-bottom"><span class="stat-delta-label">No latency data yet</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">Cache hit rate</span>
+        </div>
+        <div class="stat-card-value">0.0%</div>
+        <div class="stat-card-bottom"><span class="stat-delta-label">0 queries in cache</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-card-label">DNSSEC validation</span>
+        </div>
+        <div class="stat-card-value">0.0%</div>
+        <div class="stat-card-bottom"><span class="stat-delta-label">0 security checks passed</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Query protocols</div>
+          <div class="card-subtitle">Encrypted vs Plain DNS traffic</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:500; margin-bottom:4px;">
+                <span>DNS-over-HTTPS (DoH)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden;"><div style="width:0%; height:100%; background:var(--blue);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:500; margin-bottom:4px;">
+                <span>DNS-over-TLS (DoT)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden;"><div style="width:0%; height:100%; background:#7C3AED;"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:500; margin-bottom:4px;">
+                <span>Plain DNS (UDP/TCP)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden;"><div style="width:0%; height:100%; background:var(--text-muted);"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Query types</div>
+          <div class="card-subtitle">Distribution of record lookups</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px;">
+                <span>A (IPv4 Addresses)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:4px; background:var(--surface-2); border-radius:2px;"><div style="width:0%; height:100%; background:var(--blue);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px;">
+                <span>AAAA (IPv6 Addresses)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:4px; background:var(--surface-2); border-radius:2px;"><div style="width:0%; height:100%; background:var(--green);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px;">
+                <span>CNAME (Alias)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:4px; background:var(--surface-2); border-radius:2px;"><div style="width:0%; height:100%; background:var(--orange);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:2px;">
+                <span>TXT (Text records)</span>
+                <span>0%</span>
+              </div>
+              <div style="height:4px; background:var(--surface-2); border-radius:2px;"><div style="width:0%; height:100%; background:var(--text-muted);"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: BLOCKLIST
+       ══════════════ -->
+  <main class="content" id="section-blocklist" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Custom Blocklist</div>
+          <div class="card-subtitle">Manage domains to always block</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="blocklist-area">
+          <div class="input-row">
+            <input class="input-field" id="blocklist-input-2" type="text" placeholder="example.com" autocomplete="off" autocapitalize="off">
+            <button class="btn-add" onclick="addBlocklistEntry('blocklist-input-2')">Add</button>
+          </div>
+          <div class="domain-tags" id="blocklist-tags-2"><!-- rendered by JS --></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: ALLOWLIST
+       ══════════════ -->
+  <main class="content" id="section-allowlist" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Custom Allowlist</div>
+          <div class="card-subtitle">Manage domains to always allow</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="blocklist-area">
+          <div class="input-row">
+            <input class="input-field" id="allowlist-input" type="text" placeholder="example.com" autocomplete="off" autocapitalize="off">
+            <button class="btn-add" onclick="addAllowlistEntry()">Add</button>
+          </div>
+          <div class="domain-tags" id="allowlist-tags"><!-- rendered by JS --></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: PROFILES
+       ══════════════ -->
+  <main class="content" id="section-profiles" style="display:none;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;" id="profiles-grid-container">
+      <!-- Generated dynamically by JS -->
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: SETTINGS
+       ══════════════ -->
+  <main class="content" id="section-settings" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">DNS Server</div>
+        <div class="card-subtitle">Configure your Toran DNS server connection</div>
+      </div>
+      <div class="card-body" style="display:flex; flex-direction:column; gap:20px;">
+        <div class="form-group">
+          <label style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; display:block;">Server URL</label>
+          <input class="input-field" type="url" id="dns-server-url" placeholder="https://dns.toran.app" style="width:100%;">
+          <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Your DNS server endpoint (DoH). Leave empty for local testing.</div>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-size:13.5px; font-weight:600;">Server Status</div>
+            <div style="font-size:12px; color:var(--text-muted);" id="dns-server-status">Not configured</div>
+          </div>
+          <button class="btn btn-sm" onclick="testDNSServer()" style="font-size:12px;">Test Connection</button>
+        </div>
+        <button class="btn btn-sm" onclick="saveDNSServerConfig()" style="align-self:flex-start;">Save Configuration</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">DNS Upstream Servers</div>
+        <div class="card-subtitle">Specify where queries are forwarded after filtering</div>
+      </div>
+      <div class="card-body" style="display:flex; flex-direction:column; gap:20px;">
+        <div class="form-group">
+          <label style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; display:block;">Forwarding Upstream</label>
+          <select class="select-sm" style="width:100%; height:40px; padding:0 12px;" id="setting-upstream">
+            <option value="cloudflare">Cloudflare DNS (1.1.1.1, 1.0.0.1)</option>
+            <option value="google">Google Public DNS (8.8.8.8, 8.8.4.4)</option>
+            <option value="quad9">Quad9 Secure (9.9.9.9, 149.112.112.112)</option>
+            <option value="custom">Custom Upstream Server...</option>
+          </select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-size:13.5px; font-weight:600;">DNSSEC Validation</div>
+              <div style="font-size:12px; color:var(--text-muted);">Verify cryptographically signed DNS responses</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); padding-top:12px;">
+            <div>
+              <div style="font-size:13.5px; font-weight:600;">IPv6 Support</div>
+              <div style="font-size:12px; color:var(--text-muted);">Resolve IPv6 addresses (AAAA records)</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">DNS Cache Configurations</div>
+        <div class="card-subtitle">Boost response times by caching local records</div>
+      </div>
+      <div class="card-body" style="display:flex; flex-direction:column; gap:20px;">
+        <div class="form-group">
+          <label style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; display:block;">Cache Capacity Limit</label>
+          <select class="select-sm" style="width:100%; height:40px; padding:0 12px;">
+            <option>10,000 entries (Default)</option>
+            <option>50,000 entries</option>
+            <option>100,000 entries</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; display:block;">Minimum TTL Override (Seconds)</label>
+          <input class="input-field" type="number" value="300" style="padding:10px 12px;">
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: API KEYS
+       ══════════════ -->
+  <main class="content" id="section-apikeys" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">API Keys</div>
+          <div class="card-subtitle">Generate access tokens for the Toran REST API</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="blocklist-area">
+          <div class="input-row">
+            <input class="input-field" id="apikey-input" type="text" placeholder="Key description (e.g., Home Assistant)" autocomplete="off">
+            <button class="btn-add" onclick="generateApiKey()">Generate</button>
+          </div>
+        </div>
+        <div id="apikey-list-container" style="margin-top:20px; display:flex; flex-direction:column; gap:12px;">
+          <!-- Generated dynamically -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════
+       SECTION: ACCOUNT
+       ══════════════ -->
+  <main class="content" id="section-account" style="display:none;">
+    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:16px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Account Profile</div>
+          <div class="card-subtitle">Your personal login details</div>
+        </div>
+        <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
+          <div id="account-profile-section" style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="width:60px; height:60px; border-radius:50%; background:var(--blue-pale); color:var(--blue-dim); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; font-family:var(--font-display);" class="user-avatar-fallback">?</div>
+              <div>
+                <div style="font-size:16px; font-weight:600;" class="account-user-name">User</div>
+                <div style="font-size:13.5px; color:var(--text-muted);" class="account-user-email">—</div>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:16px;">
+              <div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:8px;">
+                <span style="color:var(--text-muted);">Subscription Plan</span>
+                <span style="font-weight:600;" id="account-plan">Free</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:8px;">
+                <span style="color:var(--text-muted);">Status</span>
+                <span style="font-weight:600; color:#065F46;">Active</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                <span style="color:var(--text-muted);">Registered</span>
+                <span id="account-registered">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Plan Usage</div>
+          <div class="card-subtitle">Active limits for the current billing cycle</div>
+        </div>
+        <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+              <span>Monthly query limit</span>
+              <span style="font-weight:500;">0 / 5,000,000 queries</span>
+            </div>
+            <div style="height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden;"><div style="width:0%; height:100%; background:var(--blue);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+              <span>Connected devices</span>
+              <span style="font-weight:500;">0 / 10 devices</span>
+            </div>
+            <div style="height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden;"><div style="width:0%; height:100%; background:var(--blue);"></div></div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+              <span>Profiles limit</span>
+              <span style="font-weight:500;">0 / 5 profiles</span>
+            </div>
+            <div style="height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden;"><div style="width:0%; height:100%; background:var(--blue);"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div><!-- /main -->
+
+<script>
+// ── FALLBACK HANDLERS ──
+// These run BEFORE the module. If the module loads, it overrides them.
+// If the module fails, these still work so onclick handlers aren't broken.
+(function() {
+  var _sections = ['dashboard','analytics','logs','filtering','blocklist','allowlist','devices','profiles','settings','account','apikeys'];
+  var _pageTitles = {dashboard:'Overview',analytics:'Analytics',logs:'Query logs',filtering:'Filtering',blocklist:'Blocklist',allowlist:'Allowlist',devices:'Devices',profiles:'Profiles',settings:'Settings',account:'Account',apikeys:'API Keys'};
+
+  window.showSection = window.showSection || function(name) {
+    _sections.forEach(function(s) {
+      var el = document.getElementById('section-' + s);
+      if (el) el.style.display = (s === name) ? 'flex' : 'none';
+    });
+    var pt = document.getElementById('page-title');
+    if (pt) pt.textContent = _pageTitles[name] || name;
+    document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+      if (el.getAttribute('onclick') && el.getAttribute('onclick').indexOf(name) !== -1) {
+        el.classList.add('active');
+      }
+    });
+    if (window.innerWidth <= 768 && window.closeSidebar) window.closeSidebar();
+    window.scrollTo(0, 0);
+  };
+
+  window.toggleSidebar = window.toggleSidebar || function() {
+    var sb = document.getElementById('sidebar');
+    var ov = document.getElementById('sidebar-overlay');
+    if (!sb) return;
+    var isOpen = sb.classList.contains('open');
+    if (isOpen) {
+      sb.classList.remove('open');
+      if (ov) ov.classList.remove('visible');
+      document.body.classList.remove('sidebar-open');
+    } else {
+      sb.classList.add('open');
+      if (ov) ov.classList.add('visible');
+      document.body.classList.add('sidebar-open');
+    }
+  };
+
+  window.openSidebar = window.openSidebar || function() {
+    var sb = document.getElementById('sidebar');
+    var ov = document.getElementById('sidebar-overlay');
+    if (sb) sb.classList.add('open');
+    if (ov) ov.classList.add('visible');
+    document.body.classList.add('sidebar-open');
+  };
+
+  window.closeSidebar = window.closeSidebar || function() {
+    var sb = document.getElementById('sidebar');
+    var ov = document.getElementById('sidebar-overlay');
+    if (sb) sb.classList.remove('open');
+    if (ov) ov.classList.remove('visible');
+    document.body.classList.remove('sidebar-open');
+  };
+
+  window.handleLogout = window.handleLogout || function() {
+    if (confirm('Are you sure you want to log out?')) {
+      window.location.href = 'login.html';
+    }
+  };
+
+  window.handleDeleteAccount = window.handleDeleteAccount || function() {
+    alert('Please sign in again to delete your account.');
+  };
+
+  window.showSetupGuideSelection = window.showSetupGuideSelection || function() {
+    alert('Loading setup guide...');
+  };
+})();
+</script>
+<script type="module">
+import store from './datastore.js';
+import authService from './auth.js';
+import setupGuide from './setup-guide.js';
+import { auth } from './firebase.js';
+import { signOut } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+
+// Expose setupGuide globally for inline onclick handlers
+window.setupGuide = setupGuide;
+
+// ── DOM ELEMENT CACHE ──
+const $ = (id) => document.getElementById(id);
+const dom = {
+  get chartBars() { return $('chart-bars'); },
+  get queryLogBody() { return $('query-log-body'); },
+  get topDomains() { return $('top-domains'); },
+  get donutLegend() { return $('donut-legend'); },
+  get toggleList() { return $('toggle-list'); },
+  get filteringFullList() { return $('filtering-full-list'); },
+  get blocklistTags() { return $('blocklist-tags'); },
+  get blocklistTags2() { return $('blocklist-tags-2'); },
+  get blocklistCount() { return $('blocklist-count'); },
+  get allowlistTags() { return $('allowlist-tags'); },
+  get apikeyListContainer() { return $('apikey-list-container'); },
+  get profilesGridContainer() { return $('profiles-grid-container'); },
+  get statTotalQueries() { return $('stat-total-queries'); },
+  get statBlockedQueries() { return $('stat-blocked-queries'); },
+  get statAllowedQueries() { return $('stat-allowed-queries'); },
+  get statBlockRate() { return $('stat-block-rate'); },
+  get deviceFilterSummary() { return $('device-filter-summary'); },
+  get dnsServerUrl() { return $('dns-server-url'); },
+  get dnsServerStatus() { return $('dns-server-status'); },
+  get apikeyInput() { return $('apikey-input'); },
+  get blocklistInput() { return $('blocklist-input'); },
+  get allowlistInput() { return $('allowlist-input'); },
+};
+
+// ── DNS SERVER CONFIG ──
+window.DNS_SERVER_URL = localStorage.getItem('dns_server_url') || '';
+
+// ── POPULATE DNS ENDPOINTS ──
+window.updateEndpoints = function() {
+  const user = authService?.getCurrentUser();
+  const uid = user?.id || 'demo';
+  const doh = `https://dns.toran.app/${uid}/dns-query`;
+  const dot = `${uid}.dns.toran.app`;
+  const ipv4 = '45.90.28.0 / 45.90.30.0';
+  
+  const epDoh = document.getElementById('ep-doh');
+  const epDot = document.getElementById('ep-dot');
+  const epIpv4 = document.getElementById('ep-ipv4');
+  
+  if (epDoh) epDoh.textContent = doh;
+  if (epDot) epDot.textContent = dot;
+  if (epIpv4) epIpv4.textContent = ipv4;
+  
+  window._endpoints = { doh, dot, ipv4 };
+};
+
+window.copyEndpoint = function(type) {
+  const ep = window._endpoints;
+  if (!ep) return;
+  
+  const value = ep[type];
+  const btn = document.getElementById(`btn-copy-${type}`);
+  
+  navigator.clipboard.writeText(value).then(() => {
+    if (btn) {
+      const original = btn.innerHTML;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
+      setTimeout(() => { btn.innerHTML = original; }, 2000);
+    }
+  });
+};
+
+// Populate on load and auth change
+setTimeout(() => window.updateEndpoints(), 1000);
+
+window.saveDNSServerConfig = async function() {
+  const url = document.getElementById('dns-server-url')?.value?.trim();
+  window.DNS_SERVER_URL = url;
+  localStorage.setItem('dns_server_url', url);
+  
+  // Save to Firestore
+  const user = authService?.getCurrentUser();
+  if (user && url) {
+    try {
+      const { doc, setDoc } = await import('./firebase.js').then(m => 
+        import('https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js').then(firestore => ({
+          doc: firestore.doc,
+          setDoc: firestore.setDoc,
+          db: m.db,
+        }))
+      );
+      const db = (await import('./firebase.js')).db;
+      await setDoc(doc(db, 'users', user.id, 'kv', 'settings'), { 
+        value: { dnsServerUrl: url } 
+      });
+    } catch (err) {
+      console.error('[Settings] Failed to save to Firestore:', err.message);
+    }
+  }
+  
+  const statusEl = document.getElementById('dns-server-status');
+  if (url) {
+    statusEl.textContent = 'Saved: ' + url;
+    statusEl.style.color = 'var(--blue)';
+  } else {
+    statusEl.textContent = 'Not configured';
+    statusEl.style.color = 'var(--text-muted)';
+  }
+};
+
+window.testDNSServer = async function() {
+  const url = document.getElementById('dns-server-url')?.value?.trim();
+  const statusEl = document.getElementById('dns-server-status');
+  
+  if (!url) {
+    statusEl.textContent = 'Please enter a server URL';
+    statusEl.style.color = 'var(--orange)';
+    return;
+  }
+  
+  statusEl.textContent = 'Testing connection...';
+  statusEl.style.color = 'var(--text-muted)';
+  
+  try {
+    const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(5000) });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      statusEl.innerHTML = '<span style="color:var(--green);">Connected!</span> ' + data.queries + ' queries logged';
+      window.DNS_SERVER_URL = url;
+      localStorage.setItem('dns_server_url', url);
+    } else {
+      statusEl.textContent = 'Server responded but status: ' + data.status;
+      statusEl.style.color = 'var(--orange)';
+    }
+  } catch (err) {
+    statusEl.textContent = 'Connection failed: ' + (err.message || 'Unknown error');
+    statusEl.style.color = 'var(--red)';
+  }
+};
+
+// Load saved config on page load and auth change
+async function loadDNSServerConfig() {
+  const savedUrl = localStorage.getItem('dns_server_url');
+  if (savedUrl) {
+    const input = document.getElementById('dns-server-url');
+    if (input) input.value = savedUrl;
+    window.DNS_SERVER_URL = savedUrl;
+    const statusEl = document.getElementById('dns-server-status');
+    if (statusEl) {
+      statusEl.textContent = 'Configured: ' + savedUrl;
+      statusEl.style.color = 'var(--blue)';
+    }
+  }
+  
+  // Also try to load from Firestore
+  const user = authService?.getCurrentUser();
+  if (user) {
+    try {
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js');
+      const db = (await import('./firebase.js')).db;
+      const settingsDoc = await getDoc(doc(db, 'users', user.id, 'kv', 'settings'));
+      if (settingsDoc.exists()) {
+        const settings = settingsDoc.data().value;
+        if (settings?.dnsServerUrl) {
+          const input = document.getElementById('dns-server-url');
+          if (input) input.value = settings.dnsServerUrl;
+          window.DNS_SERVER_URL = settings.dnsServerUrl;
+          localStorage.setItem('dns_server_url', settings.dnsServerUrl);
+          const statusEl = document.getElementById('dns-server-status');
+          if (statusEl) {
+            statusEl.textContent = 'Configured: ' + settings.dnsServerUrl;
+            statusEl.style.color = 'var(--blue)';
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Settings] Failed to load from Firestore:', err.message);
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadDNSServerConfig);
+
+window.handleLogout = async function() {
+  if (confirm('Are you sure you want to log out?')) {
+    await signOut(auth);
+    window.location.href = 'index.html';
+  }
+};
+
+window.handleDeleteAccount = async function() {
+  if (!confirm('Are you sure you want to permanently delete your account? This cannot be undone.')) return;
+  
+  const user = auth.currentUser;
+  if (!user) return;
+
+  // If user signed up with email/password, ask for password to re-authenticate
+  const provider = user.providerData[0]?.providerId;
+  if (provider === 'password') {
+    const password = prompt('Enter your password to confirm account deletion:');
+    if (!password) return;
+    try {
+      await authService.deleteAccount(password);
+      alert('Account deleted successfully.');
+      window.location.href = 'index.html';
+    } catch (err) {
+      alert('Failed to delete account: ' + (err.message || 'Unknown error'));
+    }
+  } else {
+    // Google or GitHub user — just confirm
+    if (!confirm('You are signed in with ' + provider + '. Confirm deletion?')) return;
+    try {
+      await authService.deleteAccount();
+      alert('Account deleted successfully.');
+      window.location.href = 'index.html';
+    } catch (err) {
+      alert('Failed to delete account: ' + (err.message || 'Unknown error'));
+    }
+  }
+};
+
+// ── RENDER HELPERS ──
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+function statusPill(q) {
+  if (q.status === 'allowed') return '<span class="status-pill pill-allowed">Allowed</span>';
+  if (q.category === 'Ads') return '<span class="status-pill pill-ad">Ads</span>';
+  if (q.category === 'Tracker' || q.category === 'Trackers') return '<span class="status-pill pill-tracker">Tracker</span>';
+  if (q.category === 'Malware') return '<span class="status-pill pill-malware">Malware</span>';
+  return '<span class="status-pill pill-blocked">Blocked</span>';
+}
+
+function renderQueryLog(rows, tbodyId, full = false) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  tbody.innerHTML = rows.map(q => {
+    const deviceName = q.deviceName || q.device || 'Unknown';
+    const ago = q.ago || (q.time ? timeAgo(new Date(q.time)) : 'now');
+    const ms = q.ms || q.latency || 0;
+    return `
+      <tr>
+        <td><span class="domain-cell">${q.domain}</span></td>
+        <td>${statusPill(q)}</td>
+        ${full ? `<td><span style="font-size:12.5px; color:var(--text-muted);">${q.category || 'None'}</span></td>` : ''}
+        <td><span class="device-cell"><span class="device-dot" style="background:${q.status==='allowed'?'var(--green)':'#FECACA'};"></span>${deviceName}</span></td>
+        ${full ? `<td><span class="time-cell">${ms}ms</span></td>` : ''}
+        <td><span class="time-cell">${ago}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function timeAgo(date) {
+  const sec = Math.floor((Date.now() - date) / 1000);
+  if (sec < 5) return 'just now';
+  if (sec < 60) return sec + 's ago';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min + 'm ago';
+  const h = Math.floor(min / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+// ── API Keys ──
+function generateApiKey() {
+  const input = dom.apikeyInput;
+  const description = (input?.value || '').trim();
+  if (!description) {
+    if (typeof toastManager !== 'undefined') {
+      toastManager.error('Please enter a description for this API key');
+    }
+    return;
+  }
+  
+  // Generate a random API key
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const randomStr = Array.from({ length: 32 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const key = 'toran_' + randomStr;
+  
+  const apiKeys = store.get('apiKeys') || [];
+  apiKeys.push({
+    id: Date.now().toString(36),
+    description: description,
+    key: key,
+    createdAt: new Date().toISOString(),
+    lastUsed: null,
+  });
+  
+  store.set('apiKeys', apiKeys);
+  if (input) input.value = '';
+  renderApiKeys();
+  
+  if (typeof toastManager !== 'undefined') {
+    toastManager.success('API key generated! Copy it now — you won\'t see it again.');
+  }
+}
+window.generateApiKey = generateApiKey;
+
+function renderApiKeys() {
+  const container = dom.apikeyListContainer;
+  if (!container) return;
+  const apiKeys = store.get('apiKeys') || [];
+  
+  if (apiKeys.length === 0) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No API keys yet. Create one above.</div>';
+    return;
+  }
+  
+  container.innerHTML = apiKeys.map(k => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--table-row);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:500;font-size:13.5px;">${escapeHtml(k.description)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+          <code style="font-family:var(--font-mono);font-size:11px;color:var(--blue-dim);">${k.key.slice(0, 12)}...${k.key.slice(-4)}</code>
+          ${k.lastUsed ? ' · Last used ' + timeAgo(new Date(k.lastUsed)) : ' · Never used'}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text-secondary);" onclick="navigator.clipboard.writeText('${k.key}')">Copy</button>
+        <button style="background:none;border:1px solid var(--red);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);" onclick="window.deleteApiKey('${k.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.deleteApiKey = function(id) {
+  const apiKeys = store.get('apiKeys') || [];
+  store.set('apiKeys', apiKeys.filter(k => k.id !== id));
+  renderApiKeys();
+};
+
+function renderBars() {
+  const container = dom.chartBars;
+  if (!container) return;
+  const stats = store.get('stats') || {};
+  const dailyData = stats.dailyData || getDefaultBarData();
+  const maxVal = Math.max(...dailyData.map(d => d.allowed + d.blocked), 1);
+  container.innerHTML = dailyData.map(d => {
+    const totalH = Math.round(((d.allowed + d.blocked) / maxVal) * 100);
+    const allowedH = Math.round((d.allowed / (d.allowed + d.blocked)) * totalH);
+    const blockedH = totalH - allowedH;
+    const dayLabel = d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short' }) : d.day;
+    return `
+      <div class="bar-group">
+        <div class="bar-wrap">
+          <div class="bar allowed" style="height:${Math.max(allowedH, 2)}%" title="Allowed: ${d.allowed.toLocaleString()}"></div>
+          <div class="bar blocked" style="height:${Math.max(blockedH, 2)}%" title="Blocked: ${d.blocked.toLocaleString()}"></div>
+        </div>
+        <span class="bar-label">${dayLabel}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function getDefaultBarData() {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return days.map(d => ({ day: d, allowed: 0, blocked: 0 }));
+}
+
+// Device name lookup helper
+function getDeviceName(deviceId) {
+  const devices = store.get('devices') || [];
+  const d = devices.find(d => d.id === deviceId);
+  return d ? d.name : deviceId;
+}
+
+function renderStats() {
+  const stats = store.get('stats') || {};
+  if (dom.statTotalQueries) dom.statTotalQueries.textContent = (stats.totalQueries || 0).toLocaleString();
+  if (dom.statBlockedQueries) dom.statBlockedQueries.textContent = (stats.blockedQueries || 0).toLocaleString();
+  if (dom.statAllowedQueries) dom.statAllowedQueries.textContent = (stats.allowedQueries || 0).toLocaleString();
+  if (dom.statBlockRate) {
+    const total = stats.totalQueries || 0;
+    dom.statBlockRate.textContent = total > 0 ? (stats.blockRate * 100).toFixed(1) + '%' : '0.0%';
+  }
+  const devices = store.get('devices') || [];
+  const devSub = document.querySelector('#section-dashboard .card:nth-child(2) .card-header .card-subtitle');
+  if (devSub && devSub.textContent.includes('connected')) {
+    devSub.textContent = devices.filter(d => d.online).length + ' connected';
+  }
+}
+
+function renderQueryLogFromStore() {
+  // Try to fetch from DNS server first, fall back to store
+  const user = authService?.getCurrentUser();
+  if (user && window.DNS_SERVER_URL) {
+    fetch(`${window.DNS_SERVER_URL}/api/queries?uid=${user.id}&limit=10`)
+      .then(res => res.json())
+      .then(queries => {
+        const mapped = queries.map(q => ({
+          ...q,
+          deviceName: getDeviceName(q.device),
+          ago: timeAgo(new Date(q.time)),
+        }));
+        renderQueryLog(mapped, 'query-log-body', false);
+      })
+      .catch(() => {
+        // Fall back to store
+        const queries = store.get('queries') || [];
+        const recent = queries.slice(0, 8);
+        const mapped = recent.map(q => ({
+          ...q,
+          deviceName: getDeviceName(q.device),
+          ago: timeAgo(new Date(q.time)),
+        }));
+        renderQueryLog(mapped, 'query-log-body', false);
+      });
+  } else {
+    const queries = store.get('queries') || [];
+    const recent = queries.slice(0, 8);
+    const mapped = recent.map(q => ({
+      ...q,
+      deviceName: getDeviceName(q.device),
+      ago: timeAgo(new Date(q.time)),
+    }));
+    renderQueryLog(mapped, 'query-log-body', false);
+  }
+}
+
+function renderLogsFull() {
+  const queries = store.get('queries') || [];
+  const mapped = queries.slice(0, 50).map(q => ({
+    ...q,
+    deviceName: getDeviceName(q.device),
+    ago: timeAgo(new Date(q.time)),
+    ms: q.latency || 0,
+  }));
+  renderQueryLog(mapped, 'logs-full-body', true);
+}
+
+function renderDevices() {
+  const devices = store.get('devices') || [];
+  const profiles = store.get('profiles') || [];
+  const activeProfile = profiles.find(p => p.isActive) || profiles[0];
+  const filteredDeviceIds = activeProfile?.devices || [];
+
+  const overviewContainer = document.querySelector('#section-dashboard .device-list');
+  if (overviewContainer) {
+    overviewContainer.innerHTML = devices.map(d => {
+      const icon = d.os === 'macOS' || d.name?.toLowerCase().includes('mac')
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+        : d.name?.toLowerCase().includes('iphone') || d.name?.toLowerCase().includes('ios')
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+      const lastSeen = d.lastSeen ? timeAgo(new Date(d.lastSeen)) : 'never';
+      const isFiltered = filteredDeviceIds.includes(d.id);
+      return `
+        <div class="device-row">
+          <div class="device-icon">${icon}</div>
+          <div class="device-meta">
+            <div class="device-name">${d.name || 'Unknown Device'}</div>
+            <div class="device-ip">${d.ip || 'N/A'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px;${isFiltered ? 'background:var(--green-pale);color:#065F46;' : 'background:var(--surface-2);color:var(--text-muted);'}">${isFiltered ? 'Filtered' : 'Unfiltered'}</span>
+            <div class="device-status">
+              <div class="device-online ${d.online ? 'online' : 'offline'}"><span class="device-online-dot"></span>${d.online ? 'Online' : 'Offline'}</div>
+              <div class="device-last">${d.online ? 'now' : lastSeen}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Full devices section with filtering status
+  const devSection = document.querySelector('#section-devices .device-list');
+  if (devSection) {
+    const profiles = store.get('profiles') || [];
+    const activeProfile = profiles.find(p => p.isActive) || profiles[0];
+    const filteredDeviceIds = activeProfile?.devices || [];
+    devSection.innerHTML = devices.map(d => {
+      const isFiltered = filteredDeviceIds.includes(d.id);
+      const lastSeen = d.lastSeen ? timeAgo(new Date(d.lastSeen)) : 'never';
+      const os = d.os || 'Unknown';
+      return `
+        <div class="device-row" style="padding: 16px 22px;">
+          <div class="device-icon" style="width:42px; height:42px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="device-meta">
+            <div class="device-name">${d.name || 'Unknown'}</div>
+            <div class="device-ip">${d.ip || 'N/A'} · ${os} · Last seen ${lastSeen}</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="status-pill ${isFiltered ? 'pill-allowed' : ''}" style="${!isFiltered ? 'background:var(--surface-2); color:var(--text-muted);' : ''}">${isFiltered ? 'Filtered' : 'Unfiltered'}</span>
+            <button style="background:none; border:1px solid var(--border); border-radius:6px; padding:6px 12px; font-size:12.5px; font-weight:500; color:var(--text-secondary); cursor:pointer;" onclick="window.deviceFilterToggle('${d.id}')">${isFiltered ? 'Remove from filter' : 'Add to filter'}</button>
+            <button style="background:none; border:1px solid var(--red); border-radius:6px; padding:6px 12px; font-size:12.5px; font-weight:500; color:var(--red); cursor:pointer;" onclick="window.removeDevice('${d.id}')">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+window.deviceFilterToggle = function(deviceId) {
+  const profiles = store.get('profiles') || [];
+  const activeProfile = profiles.find(p => p.isActive) || profiles[0];
+  if (!activeProfile) return;
+  const devs = activeProfile.devices || [];
+  const idx = devs.indexOf(deviceId);
+  if (idx > -1) {
+    devs.splice(idx, 1);
+  } else {
+    devs.push(deviceId);
+  }
+  activeProfile.devices = devs;
+  const updatedProfiles = profiles.map(p => p.id === activeProfile.id ? activeProfile : p);
+  store.set('profiles', updatedProfiles);
+  renderDevices();
+  renderDeviceSummary();
+};
+
+window.removeDevice = function(deviceId) {
+  const devices = store.get('devices') || [];
+  const updatedDevices = devices.filter(d => d.id !== deviceId);
+  store.set('devices', updatedDevices);
+  // Also remove from all profiles
+  const profiles = store.get('profiles') || [];
+  const updatedProfiles = profiles.map(p => ({
+    ...p,
+    devices: (p.devices || []).filter(id => id !== deviceId),
+  }));
+  store.set('profiles', updatedProfiles);
+  renderDevices();
+  renderDeviceSummary();
+  renderStats();
+};
+
+function renderDeviceSummary() {
+  const devices = store.get('devices') || [];
+  const profiles = store.get('profiles') || [];
+  const activeProfile = profiles.find(p => p.isActive) || profiles[0];
+  const filteredIds = activeProfile?.devices || [];
+  const filteredCount = devices.filter(d => filteredIds.includes(d.id)).length;
+  const unfilteredCount = devices.filter(d => !filteredIds.includes(d.id)).length;
+  const text = filteredCount + ' filtered · ' + unfilteredCount + ' unfiltered · ' + devices.length + ' total';
+
+  const summaryHtml = document.getElementById('device-filter-summary');
+  if (summaryHtml) {
+    summaryHtml.textContent = text;
+  } else {
+    const devSection = document.querySelector('#section-devices .card-header');
+    if (devSection) {
+      const sub = devSection.querySelector('.card-subtitle');
+      if (sub) sub.textContent = text;
+    }
+  }
+}
+
+function renderDonut() {
+  const stats = store.get('stats') || {};
+  const topCats = stats.topCategories || [];
+  const totalBlocked = topCats.reduce((sum, c) => sum + c.count, 0) || 0;
+  const container = document.querySelector('.donut-wrap svg');
+  const center = document.querySelector('.donut-center .donut-pct');
+  const legend = document.getElementById('donut-legend');
+  if (!container) return;
+  if (center) center.textContent = '0.0%';
+
+  if (totalBlocked === 0) {
+    container.innerHTML = `<circle cx="70" cy="70" r="54" fill="none" stroke="#F0F2F7" stroke-width="20"/>`;
+    if (legend) legend.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">No blocked queries yet</div>';
+    return;
+  }
+
+  const colors = ['#4F8EF7', '#7C3AED', '#DC2626', '#F59E0B', '#6B7280', '#3DD68C', '#E5E9F0'];
+  const circumference = 2 * Math.PI * 54;
+  let offset = 0;
+  const slices = topCats.slice(0, 6).map((cat, i) => {
+    const pct = cat.count / totalBlocked;
+    const dashLen = pct * circumference;
+    const slice = { color: colors[i % colors.length], dashLen, offset, pct: cat.percentage || (pct * 100) };
+    offset -= dashLen;
+    return slice;
+  });
+
+  const blockRate = stats.blockRate || 0;
+  if (center) center.textContent = (blockRate * 100).toFixed(1) + '%';
+
+  container.innerHTML = slices.map(s => `
+    <circle cx="70" cy="70" r="54" fill="none" stroke="${s.color}" stroke-width="20"
+      stroke-dasharray="${s.dashLen} ${circumference - s.dashLen}" stroke-dashoffset="0"
+      transform="rotate(-90 70 70)"/>
+  `).join('');
+
+  if (legend) {
+    legend.innerHTML = slices.map((s, i) => `
+      <div class="donut-legend-row">
+        <div class="donut-legend-left">
+          <div class="donut-legend-dot" style="background:${s.color};"></div>
+          ${topCats[i]?.category || 'Other'}
+        </div>
+        <div class="donut-legend-val">${s.pct.toFixed(1)}%</div>
+      </div>
+    `).join('');
+  }
+}
+
+function renderFilterToggles() {
+  const cats = [
+    { id: 'ads', label: 'Ad blocking', color: '#4F8EF7', bg: '#EFF4FF' },
+    { id: 'trackers', label: 'Tracker blocking', color: '#7C3AED', bg: '#F5F3FF' },
+    { id: 'malware', label: 'Malware protection', color: '#DC2626', bg: '#FEF2F2' },
+    { id: 'phishing', label: 'Phishing protection', color: '#D97706', bg: '#FFFBEB' },
+    { id: 'scam', label: 'Scam protection', color: '#DC2626', bg: '#FEF2F2' },
+    { id: 'spam', label: 'Spam domains', color: '#6B7280', bg: '#F0F2F7' },
+    { id: 'adult', label: 'Adult content', color: '#D97706', bg: '#FFFBEB' },
+    { id: 'gambling', label: 'Gambling', color: '#6B7280', bg: '#F0F2F7' },
+    { id: 'social', label: 'Social media', color: '#2563EB', bg: '#EFF4FF' },
+    { id: 'ai', label: 'AI services', color: '#7C3AED', bg: '#F5F3FF' },
+    { id: 'crypto', label: 'Crypto mining', color: '#D97706', bg: '#FFFBEB' },
+    { id: 'telemetry', label: 'Telemetry', color: '#6B7280', bg: '#F0F2F7' },
+    { id: 'newdomains', label: 'New domains', color: '#DC2626', bg: '#FEF2F2' },
+  ];
+  const settings = store.get('settings') || {};
+  const enabledList = settings.filteringCategories || [];
+
+  function makeToggleHTML(cat, compact = true) {
+    const enabled = enabledList.includes(cat.id);
+    const icon = `<svg width="${compact?14:16}" height="${compact?14:16}" viewBox="0 0 24 24" fill="none" stroke="${cat.color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+    return `
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-icon-wrap" style="background:${cat.bg};">${icon}</div>
+          <div>
+            <div class="toggle-label">${cat.label}</div>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" ${enabled ? 'checked' : ''} onchange="window.toggleFilter('${cat.id}', this.checked)">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    `;
+  }
+
+  const short = cats.slice(0, 6);
+  document.getElementById('toggle-list').innerHTML = short.map(c => makeToggleHTML(c, true)).join('');
+  const full = document.getElementById('filtering-full-list');
+  if (full) full.innerHTML = cats.map(c => makeToggleHTML(c, false)).join('');
+}
+
+window.toggleFilter = function(id, enabled) {
+  const settings = store.get('settings') || {};
+  let cats = settings.filteringCategories || ['ads', 'trackers', 'malware', 'phishing', 'scam', 'crypto', 'telemetry'];
+  if (enabled) {
+    if (!cats.includes(id)) cats.push(id);
+  } else {
+    cats = cats.filter(c => c !== id);
+  }
+  settings.filteringCategories = cats;
+  store.set('settings', settings);
+};
+
+function renderTopDomains() {
+  const container = document.getElementById('top-domains');
+  if (!container) return;
+  const topData = store.get('topDomainData') || [];
+  if (topData.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No query data yet. Start browsing to see top domains.</div>';
+    return;
+  }
+  const maxCount = Math.max(...topData.map(d => d.count), 1);
+  container.innerHTML = topData.map((d, i) => `
+    <div class="domain-row">
+      <span class="domain-rank">${i + 1}</span>
+      <span class="domain-name">${d.name}</span>
+      <div class="domain-bar-wrap"><div class="domain-bar-fill" style="width:${(d.count / maxCount) * 100}%"></div></div>
+      <span class="domain-count">${d.count.toLocaleString()}</span>
+    </div>
+  `).join('');
+}
+
+function renderBlocklistTags(list, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = list.map(d => `
+    <span class="domain-tag">
+      ${escapeHtml(d)}
+      <button class="domain-tag-remove" onclick="window.removeBlocklistEntry('${escapeHtml(d)}')" aria-label="Remove ${escapeHtml(d)}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </span>
+  `).join('');
+}
+
+function renderBlocklist() {
+  const blocklist = store.get('blocklist') || [];
+  renderBlocklistTags(blocklist, 'blocklist-tags');
+  renderBlocklistTags(blocklist, 'blocklist-tags-2');
+  if (dom.blocklistCount) dom.blocklistCount.textContent = blocklist.length + ' domains';
+}
+
+window.addBlocklistEntry = function(inputId) {
+  const input = inputId ? $(inputId) : dom.blocklistInput;
+  if (!input) return;
+  const val = input.value.trim().toLowerCase();
+  if (!val) { input.focus(); return; }
+  const blocklist = store.get('blocklist') || [];
+  if (blocklist.includes(val)) { input.focus(); return; }
+  blocklist.unshift(val);
+  store.set('blocklist', blocklist);
+  input.value = '';
+  renderBlocklist();
+};
+
+window.removeBlocklistEntry = function(domain) {
+  const blocklist = store.get('blocklist') || [];
+  store.set('blocklist', blocklist.filter(d => d !== domain));
+  renderBlocklist();
+};
+
+dom.blocklistInput?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.addBlocklistEntry();
+});
+
+window.addAllowlistEntry = function() {
+  const input = dom.allowlistInput;
+  const val = input.value.trim().toLowerCase();
+  if (!val) { input.focus(); return; }
+  const allowlist = store.get('allowlist') || [];
+  if (allowlist.includes(val)) { input.focus(); return; }
+  allowlist.unshift(val);
+  store.set('allowlist', allowlist);
+  input.value = '';
+  renderAllowlist();
+};
+
+window.removeAllowlistEntry = function(domain) {
+  const allowlist = store.get('allowlist') || [];
+  store.set('allowlist', allowlist.filter(d => d !== domain));
+  renderAllowlist();
+};
+
+function renderAllowlist() {
+  const allowlist = store.get('allowlist') || [];
+  const container = document.getElementById('allowlist-tags');
+  if (!container) return;
+  container.innerHTML = allowlist.map(d => `
+    <span class="domain-tag">
+      ${escapeHtml(d)}
+      <button class="domain-tag-remove" onclick="window.removeAllowlistEntry('${escapeHtml(d)}')" aria-label="Remove ${escapeHtml(d)}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </span>
+  `).join('');
+}
+
+dom.allowlistInput?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.addAllowlistEntry();
+});
+
+// Profile rendering
+function renderProfiles() {
+  const container = document.getElementById('profiles-grid-container');
+  if (!container) return;
+  const profiles = store.get('profiles') || [];
+  container.innerHTML = profiles.map(p => `
+    <div class="card" style="${p.isActive ? 'border-color: var(--blue);' : ''}">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${p.name}</div>
+          <div class="card-subtitle">${p.isActive ? 'Active profile' : 'Inactive'}</div>
+        </div>
+        <span class="status-pill ${p.isActive ? 'pill-allowed' : ''}" style="${!p.isActive ? 'background:var(--surface-2);color:var(--text-muted);' : ''}">${p.id}</span>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+        <div><strong>Devices:</strong> ${(p.devices || []).length}</div>
+        <div><strong>DoH:</strong> <span class="domain-cell">${p.endpoints?.doh || 'N/A'}</span></div>
+        <div><strong>Rules:</strong> ${Object.entries(p.rules || {}).filter(([,v]) => v).map(([k]) => k).join(', ') || 'None'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// User info in sidebar
+function renderUserInfo() {
+  const user = store.get('user') || authService.getCurrentUser();
+  if (!user) return;
+  const avatar = document.querySelector('.user-avatar');
+  const name = document.querySelector('.user-name');
+  const plan = document.querySelector('.user-plan');
+  if (avatar) avatar.textContent = user.avatar || user.name?.split(' ').map(n => n[0]).join('') || '?';
+  if (name) name.textContent = user.name || 'User';
+  if (plan) plan.textContent = (user.plan || 'beta').charAt(0).toUpperCase() + (user.plan || 'beta').slice(1) + ' plan';
+}
+
+// ── ACTIONS ──
+
+window.copyText = function(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+};
+
+// ── SETUP GUIDE SELECTION ──
+window.showSetupGuideSelection = function() {
+  const existing = document.querySelector('.setup-guide-selection-modal');
+  if (existing) existing.remove();
+
+  const dialog = document.createElement('div');
+  dialog.className = 'setup-guide-selection-modal';
+  dialog.innerHTML = `
+    <div class="setup-guide-selection-overlay" style="position:fixed;inset:0;background:rgba(10,15,26,0.8);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;">
+      <div class="setup-guide-selection-container" style="background:var(--white);border-radius:var(--radius-lg);padding:32px;max-width:900px;width:95%;box-shadow:var(--shadow-xl);max-height:90vh;overflow-y:auto;">
+        <div class="setup-guide-selection-header" style="text-align:center;margin-bottom:24px;">
+          <h3 style="font-size:22px;font-weight:600;margin-bottom:8px;">Add a Device</h3>
+          <p style="color:var(--text-muted);font-size:14px;">Choose your platform to get step-by-step DNS setup instructions</p>
+        </div>
+        <div class="setup-guide-selection-body" style="margin-bottom:24px;">
+          <div class="setup-guide-selection-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+            <button class="setup-guide-platform-card" onclick="this.closest('.setup-guide-selection-modal').remove(); setTimeout(() => window.setupGuide.show('windows'), 50);" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all 0.2s ease;text-align:center;font-family:inherit;">
+              <div style="margin-bottom:4px;"><svg width="40" height="40" viewBox="0 0 88 88" fill="none"><path d="M0 12.402L35.687 7.42V41.894H0V12.402Z" fill="#00ADEF"/><path d="M40.032 6.856L87.343 0V41.894H40.032V6.856Z" fill="#00ADEF"/><path d="M0 45.506H35.687V79.978L0 74.998V45.506Z" fill="#00ADEF"/><path d="M40.032 45.506H87.343V84.818L40.032 77.976V45.506Z" fill="#00ADEF"/></svg></div>
+              <h4 style="font-size:14px;font-weight:600;margin:0;">Windows</h4>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">Desktop / Laptop</p>
+            </button>
+            <button class="setup-guide-platform-card" onclick="this.closest('.setup-guide-selection-modal').remove(); setTimeout(() => window.setupGuide.show('macos'), 50);" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all 0.2s ease;text-align:center;font-family:inherit;">
+              <div style="margin-bottom:4px;"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><path d="M33.6 25.2C33.6 21.2 36.8 19.2 37 19.1C34.8 15.8 31.2 15.4 30 15.3C26.6 14.9 23.4 17.2 21.8 17.2C20.1 17.2 17.4 15.3 14.5 15.4C10.8 15.5 7.4 17.7 5.5 21.2C1.4 28.4 4.5 39.2 8.5 44.9C10.5 47.7 12.8 50.8 15.7 50.7C18.5 50.6 19.6 48.9 22.9 48.9C26.2 48.9 27.2 50.7 30.2 50.6C33.2 50.6 35.2 47.9 37.2 45.1C39.4 41.9 40.3 38.8 40.3 38.7C40.3 38.7 37.1 37.3 36.4 33.6C36.4 33.6 35.8 31.2 35.8 28.7C35.8 25.5 37.5 24.2 38.2 23.4C35.4 20.5 31.4 20.4 30 20.3C26.2 20 22.7 22.6 21.5 22.6C20.3 22.6 17.6 20.3 14.2 20.3C10 20.3 6.1 22.8 4 27.1L33.6 25.2Z" fill="#A2AAAD"/></svg></div>
+              <h4 style="font-size:14px;font-weight:600;margin:0;">macOS</h4>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">Mac / MacBook</p>
+            </button>
+            <button class="setup-guide-platform-card" onclick="this.closest('.setup-guide-selection-modal').remove(); setTimeout(() => window.setupGuide.show('android'), 50);" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all 0.2s ease;text-align:center;font-family:inherit;">
+              <div style="margin-bottom:4px;"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><path d="M7 24C7 16.82 12.82 11 20 11H28C35.18 11 41 16.82 41 24V34C41 35.1 40.1 36 39 36H9C7.9 36 7 35.1 7 34V24Z" fill="#3DDC84"/><circle cx="16" cy="22" r="2" fill="white"/><circle cx="32" cy="22" r="2" fill="white"/><path d="M14 8L11 2" stroke="#3DDC84" stroke-width="2" stroke-linecap="round"/><path d="M34 8L37 2" stroke="#3DDC84" stroke-width="2" stroke-linecap="round"/><rect x="14" y="37" width="4" height="7" rx="2" fill="#3DDC84"/><rect x="30" y="37" width="4" height="7" rx="2" fill="#3DDC84"/><rect x="2" y="20" width="4" height="10" rx="2" fill="#3DDC84"/><rect x="42" y="20" width="4" height="10" rx="2" fill="#3DDC84"/></svg></div>
+              <h4 style="font-size:14px;font-weight:600;margin:0;">Android</h4>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">Phone / Tablet</p>
+            </button>
+            <button class="setup-guide-platform-card" onclick="this.closest('.setup-guide-selection-modal').remove(); setTimeout(() => window.setupGuide.show('ios'), 50);" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all 0.2s ease;text-align:center;font-family:inherit;">
+              <div style="margin-bottom:4px;"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><rect x="14" y="6" width="20" height="36" rx="4" stroke="#A2AAAD" stroke-width="2.5" fill="none"/><line x1="14" y1="10" x2="34" y2="10" stroke="#A2AAAD" stroke-width="2"/><line x1="22" y1="38" x2="26" y2="38" stroke="#A2AAAD" stroke-width="2" stroke-linecap="round"/></svg></div>
+              <h4 style="font-size:14px;font-weight:600;margin:0;">iOS</h4>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">iPhone / iPad</p>
+            </button>
+            <button class="setup-guide-platform-card" onclick="this.closest('.setup-guide-selection-modal').remove(); setTimeout(() => window.setupGuide.show('router'), 50);" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all 0.2s ease;text-align:center;font-family:inherit;">
+              <div style="margin-bottom:4px;"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><rect x="6" y="20" width="36" height="16" rx="3" stroke="#F59E0B" stroke-width="2.5" fill="none"/><circle cx="14" cy="28" r="2" fill="#F59E0B"/><circle cx="20" cy="28" r="2" fill="#F59E0B"/><line x1="28" y1="28" x2="38" y2="28" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="12" x2="12" y2="20" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><line x1="24" y1="12" x2="24" y2="20" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><line x1="36" y1="12" x2="36" y2="20" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="10" r="2" fill="#F59E0B"/><circle cx="24" cy="10" r="2" fill="#F59E0B"/><circle cx="36" cy="10" r="2" fill="#F59E0B"/></svg></div>
+              <h4 style="font-size:14px;font-weight:600;margin:0;">Router</h4>
+              <p style="font-size:11px;color:var(--text-muted);margin:0;">All devices</p>
+            </button>
+          </div>
+        </div>
+        <div class="setup-guide-selection-footer" style="display:flex;justify-content:center;">
+          <button onclick="this.closest('.setup-guide-selection-modal').remove();" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;text-decoration:underline;padding:8px 16px;font-family:inherit;">Skip for now</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(dialog);
+  setTimeout(() => dialog.classList.add('active'), 10);
+};
+
+// ── Refresh display ──
+let _pollingTimer = null;
+function startPolling() {
+  if (_pollingTimer) clearInterval(_pollingTimer);
+  _pollingTimer = setInterval(() => {
+    if (document.hidden) return;
+    renderStats();
+    renderQueryLogFromStore();
+    renderTopDomains();
+    renderDonut();
+    renderBars();
+  }, 15000);
+}
+function stopPolling() {
+  if (_pollingTimer) { clearInterval(_pollingTimer); _pollingTimer = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopPolling(); }
+  else if (!_pollingTimer && auth.currentUser) { startPolling(); }
+});
+window.addEventListener('beforeunload', stopPolling);
+
+// ── SIDEBAR MOBILE ──
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+let lastFocusedElement = null;
+
+window.openSidebar = function() {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.add('visible');
+  document.body.classList.add('sidebar-open');
+  sidebarOverlay.setAttribute('aria-hidden', 'false');
+  lastFocusedElement = document.activeElement;
+  const focusable = sidebar.querySelectorAll('a, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (focusable.length) focusable[0].focus();
+};
+
+window.closeSidebar = function() {
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('visible');
+  document.body.classList.remove('sidebar-open');
+  sidebarOverlay.setAttribute('aria-hidden', 'true');
+  if (lastFocusedElement) lastFocusedElement.focus();
+};
+
+window.toggleSidebar = function() {
+  if (sidebar.classList.contains('open')) window.closeSidebar();
+  else window.openSidebar();
+};
+
+sidebarOverlay.addEventListener('click', window.closeSidebar);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sidebar.classList.contains('open')) window.closeSidebar();
+});
+
+sidebar.addEventListener('keydown', e => {
+  if (e.key !== 'Tab' || !sidebar.classList.contains('open')) return;
+  const focusable = sidebar.querySelectorAll('a, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault(); last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus();
+  }
+});
+
+// ── SECTION NAVIGATION ──
+const sections = ['dashboard', 'analytics', 'logs', 'filtering', 'blocklist', 'allowlist', 'devices', 'profiles', 'settings', 'account', 'apikeys'];
+const pageTitles = {
+  dashboard: 'Overview',
+  analytics: 'Analytics',
+  logs: 'Query logs',
+  filtering: 'Filtering',
+  blocklist: 'Blocklist',
+  allowlist: 'Allowlist',
+  devices: 'Devices',
+  profiles: 'Profiles',
+  settings: 'Settings',
+  account: 'Account',
+  apikeys: 'API Keys'
+};
+
+window.showSection = function(name) {
+  sections.forEach(s => {
+    const el = document.getElementById('section-' + s);
+    if (el) el.style.display = s === name ? 'flex' : 'none';
+  });
+  document.getElementById('page-title').textContent = pageTitles[name] || name;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(name)) {
+      el.classList.add('active');
+    }
+  });
+  if (name === 'logs') renderLogsFull();
+  if (name === 'filtering') renderFilterToggles();
+  if (name === 'devices') { renderDevices(); renderDeviceSummary(); }
+  if (name === 'profiles') renderProfiles();
+  if (name === 'apikeys') renderApiKeys();
+  if (window.innerWidth <= 768) window.closeSidebar();
+  window.scrollTo(0, 0);
+};
+
+// ── MOBILE TOPBAR ──
+function checkMobile() {
+  if (sidebarToggle) sidebarToggle.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+  if (window.innerWidth > 768 && sidebar.classList.contains('open')) window.closeSidebar();
+}
+
+window.addEventListener('resize', checkMobile);
+checkMobile();
+
+if (sidebarToggle) sidebarToggle.onclick = window.toggleSidebar;
+if (sidebarOverlay) sidebarOverlay.onclick = window.closeSidebar;
+
+// ── INIT ──
+function initDashboard() {
+  auth.onAuthStateChanged(async (firebaseUser) => {
+    if (!firebaseUser) {
+      window.location.href = 'login.html';
+      return;
+    }
+    try {
+      // Wait for Firestore data to load into cache
+      await waitForDataReady();
+      // Load recent queries and compute stats (may fail if Firestore index missing)
+      try {
+        await store.loadQueries(firebaseUser.uid);
+        store.subscribeQueries(firebaseUser.uid);
+      } catch (e) {
+        console.warn('[Dashboard] Query loading failed (non-critical):', e.message);
+      }
+      renderAll();
+      setupGuide.init();
+      checkNewUser();
+      checkEmailVerification(firebaseUser);
+      startPolling();
+      // Update endpoints with user's actual UID
+      setTimeout(() => {
+        if (window.updateEndpoints) window.updateEndpoints();
+        if (window.loadDNSServerConfig) window.loadDNSServerConfig();
+      }, 500);
+    } catch (e) {
+      console.error('[Dashboard] Init error:', e);
+      // Still render what we can
+      try { renderAll(); } catch (_) {}
+    }
+  });
+}
+
+function checkEmailVerification(firebaseUser) {
+  if (firebaseUser.emailVerified) return;
+}
+
+function waitForDataReady() {
+  return new Promise(resolve => {
+    if (store.isLoaded()) { resolve(); return; }
+    const unsub = store.subscribe('__loaded', () => { unsub(); resolve(); });
+  });
+}
+
+function checkNewUser() {
+  if (store.get('_newUser')) {
+    store.clearKey('_newUser');
+    setTimeout(() => {
+      // Show setup platform selection guide
+      window.showSetupGuideSelection();
+    }, 1500);
+  }
+}
+
+function renderAll() {
+  renderStats();
+  renderBars();
+  renderQueryLogFromStore();
+  renderFilterToggles();
+  renderTopDomains();
+  renderBlocklist();
+  renderAllowlist();
+  renderDevices();
+  renderDeviceSummary();
+  renderDonut();
+  renderProfiles();
+  renderUserInfo();
+  renderAccountInfo();
+  renderApiKeys();
+}
+
+function renderAccountInfo() {
+  const user = store.get('user') || authService.getCurrentUser();
+  if (!user) return;
+  const avatarEl = document.querySelector('#account-profile-section .user-avatar-fallback');
+  const nameEl = document.querySelector('#account-profile-section .account-user-name');
+  const emailEl = document.querySelector('#account-profile-section .account-user-email');
+  const planEl = document.getElementById('account-plan');
+  const registeredEl = document.getElementById('account-registered');
+  if (avatarEl) avatarEl.textContent = user.avatar || user.name?.split(' ').map(n => n[0]).join('') || '?';
+  if (nameEl) nameEl.textContent = user.name || 'User';
+  if (emailEl) emailEl.textContent = user.email || '—';
+  if (planEl) planEl.textContent = user.plan ? user.plan.charAt(0).toUpperCase() + user.plan.slice(1) : 'Free';
+  if (registeredEl) registeredEl.textContent = user.activity?.lastLogin ? new Date(user.activity.lastLogin).toLocaleDateString() : '—';
+}
+
+// Listen for profile updates from setup guide
+window.addEventListener('profile-updated', () => {
+  renderDevices();
+  renderDeviceSummary();
+  renderProfiles();
+});
+
+initDashboard();
+</script>
+</body>
+</html>
