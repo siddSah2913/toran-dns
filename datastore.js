@@ -72,6 +72,13 @@ class DataStore {
   // Subscribe to real-time Firestore updates for user data
   subscribeToFirestore(uid, onChange) {
     if (!uid) return;
+
+    // Unsubscribe previous listener to prevent memory leaks
+    if (this._unsubFirestore) {
+      this._unsubFirestore();
+      this._unsubFirestore = null;
+    }
+
     const kvRef = collection(db, 'users', uid, 'kv');
 
     const unsubscribe = onSnapshot(kvRef, (snapshot) => {

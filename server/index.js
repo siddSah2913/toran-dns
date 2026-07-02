@@ -1,13 +1,13 @@
-const { UDPServer, UDPClient, DOHServer, createDOHServer, Packet } = require('dns2');
+const { UDPServer } = require('dns2');
 const express = require('express');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const selfsigned = require('selfsigned');
-const { FieldValue } = require('firebase-admin').firestore;
 
 const admin = require('firebase-admin');
+const DNSFilter = require('./filter');
 
 // ── Config ──
 const PORT = parseInt(process.env.PORT || '3000');
@@ -23,7 +23,7 @@ let db = null;
 try {
   const keyPath = path.join(__dirname, '..', 'serviceAccountKey.json');
   if (fs.existsSync(keyPath)) {
-    admin.initializeApp({ credential: admin.cert(require(keyPath)) });
+    admin.initializeApp({ credential: admin.credential.cert(require(keyPath)) });
     console.log('[Firestore] Connected via service account');
   } else {
     admin.initializeApp();
@@ -34,180 +34,34 @@ try {
   console.log('[Firestore] Initialization skipped:', err.message);
 }
 
-// ── In-memory caches ──
-const blocklists = new Map();  // uid -> Set of domains
-const allowlists = new Map();  // uid -> Set of domains
-const profiles = new Map();    // uid -> profile data
-const queryLogs = [];          // recent queries (ring buffer)
-const MAX_LOG_SIZE = 10000;
+// ── DNS filter (single instance) ──
+const dnsFilter = new DNSFilter(db, { upstreamDns: UPSTREAM_DNS, upstreamDns2: UPSTREAM_DNS_2 });
 
-// ── Load built-in blocklists ──
-const BUILTIN_BLOCKLISTS = {
-  ads: [
-    'doubleclick.net', 'googlesyndication.com', 'googleadservices.com',
-    'adnxs.com', 'adsrvr.org', 'advertising.com', 'tribalfusion.com',
-    'media.net', 'amazon-adsystem.com', 'criteo.com', 'criteo.net',
-    'taboola.com', 'outbrain.com', 'moatads.com', 'quantserve.com',
-    'scorecardresearch.com', 'bluekai.com', 'brightroll.com',
-    'casalemedia.com', 'demdex.net', 'dotomi.com', 'doubleverify.com',
-    'eyeota.net', 'indexww.com', 'liadm.com', 'lijit.com',
-    'mathtag.com', 'media6degrees.com', 'mixpanel.com', 'moat.com',
-    'ns1p.net', 'permutive.com', 'pubmatic.com', 'rubiconproject.com',
-    'sharethrough.com', 'simpli.fi', 'smartadserver.com', 'spotxchange.com',
-    'stackadapt.com', 'tidaltv.com', 'tripadvisor.com', 'turn.com',
-    'undertone.com', 'vidible.tv', 'yieldmo.com', 'zergnet.com',
-  ],
-  trackers: [
-    'facebook.com/tr', 'facebook.net/tr', 'analytics.google.com',
-    'googletagmanager.com', 'hotjar.com', 'mixpanel.com', 'segment.io',
-    'amplitude.com', 'heap.io', 'pendo.io', 'fullstory.com',
-    'hotjar.com', 'mouseflow.com', 'crazyegg.com', 'luckyorange.com',
-    'optimizely.com', 'vwo.com', 'abtasty.com', 'convert.com',
-    'kissmetrics.com', 'intercom.io', 'drift.com', 'hubspot.com',
-    'salesloft.com', 'outreach.io', 'apollo.io', 'clearbit.com',
-    'bombora.com', 'demandbase.com', '6sense.com', 'terminus.io',
-  ],
-  malware: [
-    'malware.com', 'phishing.com', 'ransomware.com', 'botnet.com',
-    'cryptominer.com', 'keylogger.com', 'spyware.com', 'adware.com',
-    'trojan.com', 'virus.com', 'worm.com', 'rootkit.com',
-  ],
-};
-
-// Build initial blocklist from built-in lists
-const defaultBlocked = new Set();
-Object.values(BUILTIN_BLOCKLISTS).forEach(list => {
-  list.forEach(domain => defaultBlocked.add(domain));
-});
-
-// ── Load per-user blocklists/allowlists from Firestore ──
-async function loadUserLists(uid) {
-  if (!db || !uid) return;
-  try {
-    const blocklistSnap = await db.collection('users').doc(uid).collection('kv').doc('blocklist').get();
-    if (blocklistSnap.exists) {
-      const domains = blocklistSnap.data().value || [];
-      blocklists.set(uid, new Set(domains.map(d => d.toLowerCase())));
-    }
-  } catch (err) {
-    console.error(`[Server] Failed to load blocklist for ${uid}:`, err.message);
-  }
-  try {
-    const allowlistSnap = await db.collection('users').doc(uid).collection('kv').doc('allowlist').get();
-    if (allowlistSnap.exists) {
-      const domains = allowlistSnap.data().value || [];
-      allowlists.set(uid, new Set(domains.map(d => d.toLowerCase())));
-    }
-  } catch (err) {
-    console.error(`[Server] Failed to load allowlist for ${uid}:`, err.message);
-  }
-}
-
-// ── DNS Query Handler ──
-async function handleDNSQuery(uid, domain, type, clientIp) {
-  const normalizedDomain = domain.toLowerCase().replace(/\.$/, '');
-  
-  // Load user-specific lists on first query for this UID
-  if (uid && (!blocklists.has(uid) || !allowlists.has(uid))) {
-    await loadUserLists(uid);
-  }
-  
-  const isBlocked = defaultBlocked.has(normalizedDomain) || 
-                    (blocklists.has(uid) && blocklists.get(uid).has(normalizedDomain)) ||
-                    isSubdomainBlocked(normalizedDomain, defaultBlocked) ||
-                    (blocklists.has(uid) && isSubdomainBlocked(normalizedDomain, blocklists.get(uid)));
-  const isAllowed = (allowlists.has(uid) && allowlists.get(uid).has(normalizedDomain)) ||
-                    isSubdomainAllowed(normalizedDomain, allowlists.get(uid));
-  
-  const finalBlocked = isBlocked && !isAllowed;
-  const status = finalBlocked ? 'blocked' : 'allowed';
-  const category = categorizeDomain(normalizedDomain);
-  
-  // Log query
-  const queryLog = {
-    domain: normalizedDomain,
-    type: type,
-    status: status,
-    category: category,
-    clientIp: clientIp,
-    device: identifyDevice(clientIp, uid),
-    time: new Date().toISOString(),
-    uid: uid,
-  };
-  
-  logQuery(queryLog);
-  
-  if (db && uid) {
-    try {
-      await db.collection('users').doc(uid).collection('queries').add({
-        ...queryLog,
-        timestamp: FieldValue.serverTimestamp(),
-      });
-    } catch (err) {
-      console.error('[Firestore] Failed to log query:', err.message);
-    }
-  }
-  
-  return finalBlocked;
-}
-
-function isSubdomainBlocked(domain, list) {
-  const parts = domain.split('.');
-  for (let i = 1; i < parts.length; i++) {
-    const parent = parts.slice(i).join('.');
-    if (list.has(parent)) return true;
-  }
-  return false;
-}
-
-function isSubdomainAllowed(domain, list) {
-  if (!list) return false;
-  const parts = domain.split('.');
-  for (let i = 1; i < parts.length; i++) {
-    const parent = parts.slice(i).join('.');
-    if (list.has(parent)) return true;
-  }
-  return false;
-}
-
-function categorizeDomain(domain) {
-  if (BUILTIN_BLOCKLISTS.ads.some(d => domain.includes(d))) return 'Ads';
-  if (BUILTIN_BLOCKLISTS.trackers.some(d => domain.includes(d))) return 'Tracker';
-  if (BUILTIN_BLOCKLISTS.malware.some(d => domain.includes(d))) return 'Malware';
-  return 'Other';
-}
-
-function identifyDevice(clientIp, uid) {
-  return clientIp || 'Unknown';
-}
-
-function logQuery(entry) {
-  queryLogs.push(entry);
-  if (queryLogs.length > MAX_LOG_SIZE) {
-    queryLogs.shift();
-  }
-}
-
-// ── UDP DNS Server (only on non-Cloud Run environments) ──
+// ── UDP DNS Server (only on non-Cloud Run / non-Render environments) ──
 if (!process.env.RENDER) {
   try {
     const dnsServer = new UDPServer({
       handle: async (request, send) => {
         const question = request.questions[0];
         if (!question) return send({ rcode: 1 });
-        
+
         const domain = question.name;
         const type = question.type;
         const clientIp = request.address?.address || 'unknown';
-        
+
+        // Extract uid from a subdomain: <uid>.dns.toran
         let uid = null;
         const parts = domain.split('.');
         if (parts.length > 3 && parts[parts.length - 3] === 'dns' && parts[parts.length - 2] === 'toran') {
-          uid = parts[0];
+          const candidate = parts[0];
+          // Validate Firebase UID format: 28 alphanumeric chars, hyphens, underscores
+          if (/^[a-zA-Z0-9_-]{20,}$/.test(candidate)) {
+            uid = candidate;
+          }
         }
-        
-        const blocked = await handleDNSQuery(uid, domain, type, clientIp);
-        
+
+        const { blocked, response } = await dnsFilter.getFilteredResponse(uid, domain, type, clientIp);
+
         if (blocked) {
           return send({
             id: request.id,
@@ -216,15 +70,13 @@ if (!process.env.RENDER) {
             rcode: 3,
           });
         }
-        
-        const client = new UDPClient();
-        try {
-          const response = await client({ name: domain, type });
-          send(response);
-        } catch (err) {
-          console.error('[DNS] Upstream error:', err.message);
-          send({ rcode: 2 });
-        }
+
+        send({
+          id: request.id,
+          questions: response.questions || request.questions,
+          answers: response.answers || [],
+          rcode: response.rcode ?? 0,
+        });
       },
       port: PORT,
     });
@@ -242,9 +94,53 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS
+// Security headers
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'DENY');
+  res.header('X-XSS-Protection', '1; mode=block');
+  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (req.secure) {
+    res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+// Simple rate limiting (in-memory, per-IP)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 100; // requests per window
+
+app.use((req, res, next) => {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now - record.start > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { start: now, count: 1 });
+    return next();
+  }
+
+  record.count++;
+  if (record.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({ error: 'Too many requests' });
+  }
+  next();
+});
+
+// CORS — restrict to known origins
+const ALLOWED_ORIGINS = [
+  'https://torandns.firebaseapp.com',
+  'https://toran-dns.web.app',
+  'http://localhost:3000',
+  'http://localhost:5000',
+];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(200);
@@ -256,14 +152,14 @@ async function handleDoH(req, res, uid) {
   try {
     const domain = req.query.name || req.query.dn;
     const type = req.query.type || 'A';
-    
+
     if (!domain) {
       return res.status(400).json({ error: 'Missing domain parameter' });
     }
-    
+
     const clientIp = req.ip || req.connection.remoteAddress;
-    const blocked = await handleDNSQuery(uid, domain, type, clientIp);
-    
+    const { blocked, response, cacheHit } = await dnsFilter.getFilteredResponse(uid, domain, type, clientIp);
+
     if (blocked) {
       return res.json({
         Status: 3,
@@ -272,13 +168,12 @@ async function handleDoH(req, res, uid) {
         Answer: [],
       });
     }
-    
-    const client = new UDPClient();
-    const response = await client({ name: domain, type: parseInt(type) || 1 });
-    
+
+    res.set('X-Cache', cacheHit ? 'HIT' : 'MISS');
+
     res.json({
-      Status: 0,
-      TC: false, RD: true, RA: true, AD: response.ad || false, CD: false,
+      Status: response.rcode ?? 0,
+      TC: false, RD: true, RA: true, AD: false, CD: false,
       Question: response.questions || [{ name: domain, type: parseInt(type) || 1 }],
       Answer: (response.answers || []).map(a => ({
         name: a.name, type: a.type, TTL: a.ttl || 300, data: a.address || a.data,
@@ -286,15 +181,18 @@ async function handleDoH(req, res, uid) {
     });
   } catch (err) {
     console.error('[DoH] Error:', err.message);
-    res.json({ Status: 2, TC: false, RD: true, RA: true, AD: false, CD: false, Question: [], Answer: [] });
+    res.json({
+      Status: 2, TC: false, RD: true, RA: true, AD: false, CD: false,
+      Question: [], Answer: [],
+    });
   }
 }
 
 // DoH endpoints
+// Note: `/dns-query` (without a uid prefix) is the public no-account endpoint.
+// All filtering is anonymous and uses default categories.
 app.get('/dns-query', (req, res) => {
-  const pathParts = req.path.split('/');
-  const uid = pathParts.length > 2 ? pathParts[1] : null;
-  handleDoH(req, res, uid);
+  handleDoH(req, res, null);
 });
 
 app.get('/:uid/dns-query', (req, res) => {
@@ -305,23 +203,30 @@ app.get('/:uid/dns-query', (req, res) => {
 app.get('/api/queries', (req, res) => {
   const uid = req.query.uid;
   const limit = parseInt(req.query.limit) || 100;
-  
-  let logs = queryLogs;
-  if (uid) {
-    logs = logs.filter(q => q.uid === uid);
-  }
-  
-  res.json(logs.slice(-limit).reverse());
+  res.json(dnsFilter.getRecentQueries({ uid, limit }));
 });
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', queries: queryLogs.length });
+  res.json({ status: 'ok', queries: dnsFilter.queryLogs.length });
+});
+
+app.get('/server-info', (req, res) => {
+  res.json({
+    hostname: HOSTNAME,
+    dohHostname: HOSTNAME, // Base hostname for DoH
+    dohTlsHostname: HOSTNAME, // DoH over TLS — served via the same HTTPS port when USE_TLS is on
+    ipv4: 'Not available on Render (Requires VPS)',
+    upstream: UPSTREAM_DNS,
+    upstream2: UPSTREAM_DNS_2,
+    protocol: 'DoH (DNS-over-HTTPS)',
+    notes: 'DoT is not supported on Render. Use DoH via apps that support custom DoH URLs (e.g. Intra, dnscrypt-proxy).',
+  });
 });
 
 // ── Start DoH Server ──
 if (USE_TLS) {
-  // Generate self-signed cert for DoT
+  // Generate self-signed cert for DoH-over-TLS on the dedicated port.
   const pems = selfsigned.generate([{ name: 'commonName', value: HOSTNAME }], {
     days: 365,
     algorithm: 'sha256',
@@ -332,14 +237,14 @@ if (USE_TLS) {
       ]},
     ],
   });
-  
-  const dotServer = https.createServer({
+
+  const dohTlsServer = https.createServer({
     key: pems.private,
     cert: pems.cert,
   }, app);
-  
-  dotServer.listen(DOT_PORT, () => {
-    console.log(`[DoT] TLS server listening on port ${DOT_PORT}`);
+
+  dohTlsServer.listen(DOT_PORT, () => {
+    console.log(`[DoH-TLS] HTTPS server listening on port ${DOT_PORT}`);
   });
 }
 
@@ -349,6 +254,7 @@ dohServer.listen(DOH_PORT, () => {
   console.log(`[DoH] Endpoint: http://localhost:${DOH_PORT}/dns-query`);
   console.log(`[DoH] User endpoint: http://localhost:${DOH_PORT}/:uid/dns-query`);
   console.log(`[API] Query logs: http://localhost:${DOH_PORT}/api/queries`);
+  console.log(`[Upstream] Primary: ${UPSTREAM_DNS}, Secondary: ${UPSTREAM_DNS_2}`);
 });
 
 console.log('[Toran DNS] Server started successfully');

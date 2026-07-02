@@ -9,6 +9,9 @@ class SetupGuideManager {
     this.isVisible = false;
     this.modal = null;
     this.isDesktop = typeof window !== 'undefined' && window.innerWidth > 768;
+    this._handleResize = () => {
+      this.isDesktop = window.innerWidth > 768;
+    };
     this.setupGuides = {
       windows: this.getWindowsGuide(),
       android: this.getAndroidGuide(),
@@ -17,9 +20,7 @@ class SetupGuideManager {
       macos: this.getMacGuide(),
     };
     if (typeof window !== 'undefined') {
-      window.addEventListener('resize', () => {
-        this.isDesktop = window.innerWidth > 768;
-      });
+      window.addEventListener('resize', this._handleResize);
     }
   }
 
@@ -27,18 +28,32 @@ class SetupGuideManager {
     const user = store.get('user');
     const profiles = store.get('profiles') || [];
     const activeProfile = profiles.find(p => p.isActive) || profiles[0];
-    
+
     const uid = user?.id || 'demo';
     const baseUrl = window.DNS_SERVER_URL || 'https://toran-dns.onrender.com';
     const doh = `${baseUrl}/${uid}/dns-query`;
-    const dot = `${uid}.dns.toran.app`;
-    const ipv4 = activeProfile?.ipv4 || '45.90.28.0 / 45.90.30.0';
-    
-    return { doh, dot, ipv4, uid };
+    // DoH-over-TLS uses the same HTTPS endpoint (Render terminates TLS).
+    const dohTls = doh;
+
+    // Resolve IPv4 only when the profile actually has one. Render deployments
+    // don't expose TCP/53, so we surface null and let the UI skip the address
+    // box rather than show a placeholder string as if it were a usable value.
+    const rawIpv4 = activeProfile?.ipv4;
+    const ipv4 = rawIpv4 && /^\d{1,3}(\.\d{1,3}){3}(\/\d{1,3}(\.\d{1,3}){3})?$/.test(rawIpv4)
+      ? rawIpv4
+      : null;
+
+    return { doh, dohTls, ipv4, uid };
   }
 
   init() {
     this.createModal();
+  }
+
+  destroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this._handleResize);
+    }
   }
 
   createModal() {
@@ -181,13 +196,24 @@ class SetupGuideManager {
     const container = document.getElementById('setup-guide-step-container');
     if (!container) return;
 
-    // Re-resolve endpoints at render time so user's actual addresses are shown
+    // Re-resolve endpoints at render time so user's actual addresses are shown.
+    // Returns nulls (not placeholder strings) when IPv4 is unavailable, so the
+    // address box is simply not rendered.
     const ep = this.getEndpoints();
-    const primary = ep.ipv4.split('/')[0].trim();
-    const secondary = ep.ipv4.split('/')[1]?.trim() || '45.90.30.0';
-    // Override step DNS addresses with current values
-    if (step.dnsAddress !== undefined) step.dnsAddress = primary;
-    if (step.dnsAddress2 !== undefined) step.dnsAddress2 = secondary;
+    const primary = ep.ipv4 ? ep.ipv4.split('/')[0].trim() : null;
+    const secondary = ep.ipv4 && ep.ipv4.includes('/') ? ep.ipv4.split('/')[1].trim() : null;
+    // Android guide shows the DoH URL in its address box.
+    const dohUrl = ep.doh;
+
+    // Compute which value to show, if any. The step can pin a literal via
+    // step.dnsAddress (used as a last-resort fallback), or set step.addressKind
+    // to 'doh' to show the DoH URL.
+    const addressValue =
+      primary ||
+      (step.addressKind === 'doh' ? dohUrl : null) ||
+      step.dnsAddress ||
+      null;
+    const secondaryValue = secondary || step.dnsAddress2 || null;
     const platformIcons = {
       windows: '<svg width="32" height="32" viewBox="0 0 88 88" fill="none"><path d="M0 12.402L35.687 7.42V41.894H0V12.402Z" fill="#00ADEF"/><path d="M40.032 6.856L87.343 0V41.894H40.032V6.856Z" fill="#00ADEF"/><path d="M0 45.506H35.687V79.978L0 74.998V45.506Z" fill="#00ADEF"/><path d="M40.032 45.506H87.343V84.818L40.032 77.976V45.506Z" fill="#00ADEF"/></svg>',
       android: '<svg width="32" height="32" viewBox="0 0 48 48" fill="none"><path d="M7 24C7 16.82 12.82 11 20 11H28C35.18 11 41 16.82 41 24V34C41 35.1 40.1 36 39 36H9C7.9 36 7 35.1 7 34V24Z" fill="#3DDC84"/><circle cx="16" cy="22" r="2" fill="white"/><circle cx="32" cy="22" r="2" fill="white"/><path d="M14 8L11 2" stroke="#3DDC84" stroke-width="2" stroke-linecap="round"/><path d="M34 8L37 2" stroke="#3DDC84" stroke-width="2" stroke-linecap="round"/><rect x="14" y="37" width="4" height="7" rx="2" fill="#3DDC84"/><rect x="30" y="37" width="4" height="7" rx="2" fill="#3DDC84"/><rect x="2" y="20" width="4" height="10" rx="2" fill="#3DDC84"/><rect x="42" y="20" width="4" height="10" rx="2" fill="#3DDC84"/></svg>',
@@ -229,24 +255,24 @@ class SetupGuideManager {
         </div>
         <div class="setup-guide-step-body">
           <p class="setup-guide-step-description">${step.description}</p>
-          ${step.dnsAddress ? `
+          ${addressValue ? `
             <div style="margin:16px 0;padding:16px;background:linear-gradient(135deg,#EFF4FF,#F0F2F7);border-radius:var(--radius);border:2px solid var(--blue);position:relative;">
               <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;">Your DNS address</div>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <code style="flex:1;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-mono);word-break:break-all;font-weight:500;color:var(--blue-dim);min-width:0;">${step.dnsAddress}</code>
-                <button onclick="navigator.clipboard.writeText('${step.dnsAddress.replace(/'/g, "\\'")}').then(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#059669\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied!';setTimeout(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\' ry=\\'2\\'></rect><path d=\\'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\\'></path></svg> Copy';},2000)})" style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--blue);color:var(--white);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#3B6DE0'" onmouseout="this.style.background='var(--blue)'">
+                <code style="flex:1;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-mono);word-break:break-all;font-weight:500;color:var(--blue-dim);min-width:0;">${addressValue}</code>
+                <button onclick="navigator.clipboard.writeText('${addressValue.replace(/'/g, "\\'")}').then(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#059669\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied!';setTimeout(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\' ry=\\'2\\'></rect><path d=\\'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\\'></path></svg> Copy';},2000)})" style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--blue);color:var(--white);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#3B6DE0'" onmouseout="this.style.background='var(--blue)'">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                   Copy
                 </button>
               </div>
             </div>
           ` : ''}
-          ${step.dnsAddress2 ? `
+          ${secondaryValue ? `
             <div style="margin:0 0 16px 0;padding:16px;background:linear-gradient(135deg,#ECFDF5,#F0F2F7);border-radius:var(--radius);border:2px solid var(--green);position:relative;">
               <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;">Alternate DNS address</div>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <code style="flex:1;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-mono);word-break:break-all;font-weight:500;color:#059669;min-width:0;">${step.dnsAddress2}</code>
-                <button onclick="navigator.clipboard.writeText('${step.dnsAddress2.replace(/'/g, "\\'")}').then(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#059669\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied!';setTimeout(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\' ry=\\'2\\'></rect><path d=\\'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\\'></path></svg> Copy';},2000)})" style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:#059669;color:var(--white);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                <code style="flex:1;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-mono);word-break:break-all;font-weight:500;color:#059669;min-width:0;">${secondaryValue}</code>
+                <button onclick="navigator.clipboard.writeText('${secondaryValue.replace(/'/g, "\\'")}').then(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'#059669\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied!';setTimeout(()=>{this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\' ry=\\'2\\'></rect><path d=\\'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\\'></path></svg> Copy';},2000)})" style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:#059669;color:var(--white);border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                   Copy
                 </button>
@@ -309,9 +335,6 @@ class SetupGuideManager {
   }
 
   getWindowsGuide() {
-    const ep = this.getEndpoints();
-    const primary = ep.ipv4.split('/')[0].trim();
-    const secondary = ep.ipv4.split('/')[1]?.trim() || '45.90.30.0';
     return {
       name: 'Windows',
       steps: [
@@ -336,8 +359,6 @@ class SetupGuideManager {
           description: 'Type in your personal Toran DNS address. This filters out ads and trackers.',
           difficulty: 'Easy',
           time: 1,
-          dnsAddress: primary,
-          dnsAddress2: secondary,
           instructions: [
             'In the DNS dropdown, select <strong>Manual</strong>.',
             'Turn on <strong>IPv4</strong>.',
@@ -345,7 +366,7 @@ class SetupGuideManager {
             'Copy the <strong>green address</strong> above and paste it into "Alternate DNS".',
             'Click <strong>Save</strong>.',
           ],
-          tip: '',
+          tip: 'IMPORTANT: If you are using the default Render deployment, IPv4 DNS may not work. Use a DoH-compatible browser or app for best results.',
           devices: [],
         },
         {
@@ -367,7 +388,6 @@ class SetupGuideManager {
   }
 
   getMacGuide() {
-    const ep = this.getEndpoints();
     return {
       name: 'macOS',
       steps: [
@@ -393,8 +413,6 @@ class SetupGuideManager {
           description: 'Type in your personal Toran DNS address.',
           difficulty: 'Easy',
           time: 1,
-          dnsAddress: ep.ipv4.split('/')[0].trim(),
-          dnsAddress2: ep.ipv4.split('/')[1]?.trim() || '45.90.30.0',
           instructions: [
             'Click <strong>DNS</strong> on the left.',
             'Click the <strong>+</strong> button under "DNS Servers".',
@@ -402,7 +420,7 @@ class SetupGuideManager {
             'Click <strong>+</strong> again and paste the <strong>green address</strong>.',
             'Click <strong>OK</strong>, then <strong>Apply</strong>.',
           ],
-          tip: '',
+          tip: 'IMPORTANT: If you are using the default Render deployment, IPv4 DNS may not work. Use a DoH-compatible browser or app for best results.',
           devices: [],
         },
         {
@@ -424,39 +442,38 @@ class SetupGuideManager {
   }
 
   getAndroidGuide() {
-    const ep = this.getEndpoints();
     return {
       name: 'Android',
       steps: [
         {
-          title: 'Download the Intra App',
-          description: 'Android doesn\'t have a built-in DoH setting. Intra is a free app from Google that enables it.',
+          title: 'Set up via Intra app (DoH)',
+          description: 'Use the Intra app to route DNS-over-HTTPS through your Toran endpoint. Private DNS / DoT is not supported on Render.',
           difficulty: 'Easy',
           time: 1,
+          addressKind: 'doh',
           instructions: [
-            'Open the <strong>Google Play Store</strong>.',
-            'Search for <strong>"Intra"</strong> by Google.',
-            'Install and open the app.',
+            'Download <strong>Intra</strong> from the Google Play Store.',
+            'Open Intra and tap <strong>Add custom DNS</strong>.',
+            'Paste the <strong>DoH URL</strong> above.',
+            'Toggle Intra <strong>ON</strong>.',
           ],
-          tip: 'Intra is free, open-source, and made by Google. No sign-up needed.',
+          tip: 'Render does not expose TCP/853, so the system "Private DNS" hostname field cannot be used. The Intra app is the supported way to use DoH on Android.',
           devices: [
             { name: 'Android phone', subtitle: 'Android 9 or newer' },
             { name: 'Android tablet', subtitle: 'Samsung, Pixel, etc.' },
           ],
         },
         {
-          title: 'Enter Your DNS Address',
-          description: 'Copy the DoH address below and paste it into Intra.',
+          title: 'Verify the connection',
+          description: 'Confirm Intra is routing traffic through Toran DNS.',
           difficulty: 'Easy',
           time: 1,
-          dnsAddress: ep.doh,
           instructions: [
-            'In Intra, tap <strong>Add custom DNS</strong>.',
-            'Paste the <strong>blue address</strong> above.',
-            'Toggle Intra <strong>ON</strong>.',
-            'That\'s it! Your phone is now protected on all networks.',
+            'Open a browser in Intra and visit any website.',
+            'In the Intra app, confirm the status reads <strong>Connected</strong>.',
+            'If a domain is on your blocklist, it should fail to resolve.',
           ],
-          tip: 'This works on both Wi-Fi and mobile data. Keep Intra running in the background.',
+          tip: 'Keep Intra running in the background for filtering to work.',
           devices: [{ name: 'Done!', subtitle: 'Your Android is now protected' }],
         },
       ],
@@ -464,9 +481,6 @@ class SetupGuideManager {
   }
 
   getIOSGuide() {
-    const ep = this.getEndpoints();
-    const primary = ep.ipv4.split('/')[0].trim();
-    const secondary = ep.ipv4.split('/')[1]?.trim() || '45.90.30.0';
     return {
       name: 'iOS',
       steps: [
@@ -492,8 +506,6 @@ class SetupGuideManager {
           description: 'Copy the addresses below and paste them into your DNS settings.',
           difficulty: 'Easy',
           time: 2,
-          dnsAddress: primary,
-          dnsAddress2: secondary,
           instructions: [
             'Tap <strong>Manual</strong> (instead of Automatic).',
             'Tap <strong>-</strong> to remove any existing DNS servers.',
@@ -522,9 +534,6 @@ class SetupGuideManager {
   }
 
   getRouterGuide() {
-    const ep = this.getEndpoints();
-    const primary = ep.ipv4.split('/')[0].trim();
-    const secondary = ep.ipv4.split('/')[1]?.trim() || '45.90.30.0';
     return {
       name: 'Router',
       steps: [
@@ -550,8 +559,6 @@ class SetupGuideManager {
           description: 'Copy the addresses below and paste them into your router\'s DNS settings.',
           difficulty: 'Medium',
           time: 3,
-          dnsAddress: primary,
-          dnsAddress2: secondary,
           instructions: [
             'Find <strong>DNS settings</strong> (usually under "Internet", "WAN", or "Network").',
             'Change DNS from "Automatic" to <strong>Manual</strong> or <strong>Custom</strong>.',

@@ -3,7 +3,6 @@
  * Lightweight toast notifications for dashboard alerts and feedback
  */
 
-const TOAST_VERSION = '1.0.0';
 class ToastManager {
   constructor() {
     this.container = null;

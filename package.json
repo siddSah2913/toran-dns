@@ -1,0 +1,23 @@
+{
+  "name": "toran-dns",
+  "version": "1.0.0",
+  "description": "Toran DNS - Personal DNS filtering service",
+  "private": true,
+  "scripts": {
+    "lint": "eslint *.js server/*.js --no-eslintrc -c .eslintrc.json",
+    "lint:fix": "eslint *.js server/*.js --no-eslintrc -c .eslintrc.json --fix",
+    "serve": "npx serve . -l 5000",
+    "server": "cd server && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siddSah2913/toran-dns.git"
+  },
+  "bugs": {
+    "url": "https://github.com/siddSah2913/toran-dns/issues"
+  },
+  "homepage": "https://github.com/siddSah2913/toran-dns#readme",
+  "devDependencies": {
+    "eslint": "^8.57.1"
+  }
+}

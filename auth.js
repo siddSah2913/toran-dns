@@ -25,7 +25,6 @@ import {
   deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import setupGuide from './setup-guide.js';
-import toastManager from './toast.js';
 
 if (typeof window !== 'undefined') window.setupGuide = setupGuide;
 
@@ -107,8 +106,13 @@ class AuthService {
 
     // Delete all Firestore data for this user
     const kvRef = collection(db, 'users', user.uid, 'kv');
-    const snapshot = await getDocs(kvRef);
-    const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
+    const kvSnapshot = await getDocs(kvRef);
+    const deletePromises = kvSnapshot.docs.map(d => deleteDoc(d.ref));
+
+    const queriesRef = collection(db, 'users', user.uid, 'queries');
+    const queriesSnapshot = await getDocs(queriesRef);
+    queriesSnapshot.docs.forEach(d => deletePromises.push(deleteDoc(d.ref)));
+
     await Promise.all(deletePromises);
 
     // Delete the user document itself

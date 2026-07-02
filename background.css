@@ -1,0 +1,241 @@
+/* ═══════════════════════════════════════════════════════════════
+   TORAN DNS — Animated Background System
+   Reusable across all pages: Landing, Auth, Dashboard, 404
+   GPU-friendly: only animate transform, opacity
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── BASE BACKGROUND ── */
+.bg-base {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(80,130,255,0.18), transparent 40%),
+    radial-gradient(circle at 85% 10%, rgba(120,180,255,0.15), transparent 35%),
+    radial-gradient(circle at 60% 80%, rgba(140,220,255,0.14), transparent 45%),
+    linear-gradient(180deg, #eef5ff, #f7fbff);
+}
+
+/* ── FLOATING BLOBS ── */
+.bg-blobs {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  will-change: transform;
+}
+
+/* Blob positions and colors */
+.bg-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: rgba(80,130,255,0.5);
+  top: -10%;
+  left: -5%;
+  animation: bg-float-1 35s ease-in-out infinite;
+}
+
+.bg-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: rgba(120,80,255,0.4);
+  top: 60%;
+  right: -8%;
+  animation: bg-float-2 40s ease-in-out infinite;
+}
+
+.bg-blob-3 {
+  width: 450px;
+  height: 450px;
+  background: rgba(50,180,230,0.35);
+  bottom: -12%;
+  left: 30%;
+  animation: bg-float-3 30s ease-in-out infinite 5s;
+}
+
+.bg-blob-4 {
+  width: 350px;
+  height: 350px;
+  background: rgba(255,255,255,0.4);
+  top: 30%;
+  left: 60%;
+  animation: bg-float-4 45s ease-in-out infinite 10s;
+}
+
+/* Blob keyframes — distinct for each to avoid sync */
+@keyframes bg-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -40px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(15px, 35px) scale(1.02); }
+}
+
+@keyframes bg-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-25px, 30px) scale(1.06); }
+  50% { transform: translate(20px, -25px) scale(0.94); }
+  75% { transform: translate(-15px, -20px) scale(1.03); }
+}
+
+@keyframes bg-float-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(20px, -30px) scale(1.04); }
+  50% { transform: translate(-30px, 15px) scale(0.96); }
+  75% { transform: translate(25px, 25px) scale(1.02); }
+}
+
+@keyframes bg-float-4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-20px, 25px) scale(1.03); }
+  50% { transform: translate(15px, -30px) scale(0.97); }
+  75% { transform: translate(-25px, -15px) scale(1.04); }
+}
+
+/* ── MESH GRADIENT OVERLAY ── */
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(37,99,235,0.12), transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.08), transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(59,130,246,0.06), transparent 60%);
+  mix-blend-mode: overlay;
+}
+
+/* ── GLASS REFLECTIONS ── */
+.bg-reflection {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.bg-reflection-1 {
+  width: 400px;
+  height: 400px;
+  top: 15%;
+  left: 25%;
+  animation: bg-reflect 25s ease-in-out infinite;
+}
+
+.bg-reflection-2 {
+  width: 300px;
+  height: 300px;
+  bottom: 20%;
+  right: 20%;
+  animation: bg-reflect 30s ease-in-out infinite 5s;
+}
+
+.bg-reflection-3 {
+  width: 250px;
+  height: 250px;
+  top: 60%;
+  left: 60%;
+  animation: bg-reflect 28s ease-in-out infinite 10s;
+}
+
+@keyframes bg-reflect {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
+  50% { transform: translate(25px, -35px) rotate(180deg); opacity: 0.5; }
+}
+
+/* ── NOISE TEXTURE ── */
+.bg-noise {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.025;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── VIGNETTE ── */
+.bg-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(15,23,42,0.08) 100%);
+}
+
+/* ── GRID TEXTURE (subtle) ── */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── COMPLETE BACKGROUND ASSEMBLY ── */
+/* Include this div in any page for the full living background */
+/*
+<div class="bg-base" aria-hidden="true"></div>
+<div class="bg-blobs" aria-hidden="true">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-blob bg-blob-4"></div>
+</div>
+<div class="bg-mesh" aria-hidden="true"></div>
+<div class="bg-reflection bg-reflection-1" aria-hidden="true"></div>
+<div class="bg-reflection bg-reflection-2" aria-hidden="true"></div>
+<div class="bg-reflection bg-reflection-3" aria-hidden="true"></div>
+<div class="bg-noise" aria-hidden="true"></div>
+<div class="bg-vignette" aria-hidden="true"></div>
+*/
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob,
+  .bg-reflection {
+    animation: none !important;
+  }
+}
+
+/* ── DARK VARIANT (for dark sections) ── */
+.bg-dark .bg-base {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(37,99,235,0.15), transparent 40%),
+    radial-gradient(circle at 85% 10%, rgba(59,130,246,0.12), transparent 35%),
+    radial-gradient(circle at 60% 80%, rgba(99,102,241,0.1), transparent 45%),
+    linear-gradient(180deg, #0F172A, #1E293B);
+}
+
+.bg-dark .bg-blob-1 { background: rgba(37,99,235,0.4); }
+.bg-dark .bg-blob-2 { background: rgba(59,130,246,0.35); }
+.bg-dark .bg-blob-3 { background: rgba(99,102,241,0.3); }
+.bg-dark .bg-blob-4 { background: rgba(255,255,255,0.15); }
+
+/* ── PERFORMANCE: Will-change hints for GSAP ── */
+.bg-blob,
+.bg-reflection {
+  will-change: transform;
+}
+
+/* ── MOBILE: Reduce blob size ── */
+@media (max-width: 768px) {
+  .bg-blob-1 { width: 400px; height: 400px; }
+  .bg-blob-2 { width: 350px; height: 350px; }
+  .bg-blob-3 { width: 300px; height: 300px; }
+  .bg-blob-4 { width: 250px; height: 250px; }
+  .bg-reflection-1 { width: 250px; height: 250px; }
+  .bg-reflection-2 { width: 200px; height: 200px; }
+  .bg-reflection-3 { width: 150px; height: 150px; }
+}
